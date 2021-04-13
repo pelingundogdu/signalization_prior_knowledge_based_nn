@@ -42,7 +42,7 @@ Project Organization
         ├── nn_desing_scripts.py       <- scripts for proposed NN
         ├── path_scripts.py            <- scripts for location 
         ├── settings.py                <- the main script file
-        └── visualization_scripts.py   <- scripts for visualtion
+        └── visualization_scripts.py   <- scripts for visualization
     
 
 --------
