@@ -73,7 +73,8 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
         df_raw = pd.read_pickle(os.path.join(loc_ds, experiment, dataset))
     else:
         df_raw = pd.read_csv(os.path.join(loc_ds, experiment, dataset))
-
+    
+    # SORTING GENE LIST
     df_raw = pd.concat([(df_raw.iloc[:, :-1]).astype(float) ,df_raw.iloc[:, -1]], axis=1)
     sort_genes = sorted(df_raw.columns[:-1])
     sort_genes.extend(df_raw.columns[-1:])
