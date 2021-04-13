@@ -1,7 +1,14 @@
-doc_p1
-==============================
+**DATASET**
 
-Single-cell RNA-seq data with pathways knowledge integrated in NN.
+<p><small>dataset link, https://drive.google.com/drive/folders/1qtCAPsPMznjMZ57BscAFgd-8Cnq9KnU3?usp=sharing
+the data folder should be located outside of the project ../00_data/signalization_prior_knowledge_based_nn</small></p>
+------------
+
+
+**TRELLO**
+<p><small>https://trello.com/b/ivgekKYB/draft</small></p>
+------------
+
 
 Project Organization
 ------------
