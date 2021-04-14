@@ -25,21 +25,20 @@ import numpy as np
 
 def create_biological_layer(species, source):
     sys.path.append('./')
-    from scripts import settings as st
-    from scripts import path_scripts as po
+    from scripts import config as src
 
     # defining output folder
-    output_folder = po.define_folder( os.path.join(st.DIR_DATA_PROCESSED, species, source ) )
+    output_folder = src.define_folder( os.path.join(src.DIR_DATA_PROCESSED, species, source ) )
     print(output_folder)
     # importing raw dataset which is imported by hipathia
-    df_entrez_symbol = pd.read_csv(os.path.join(st.DIR_DATA_PROCESSED, species, source, 'entrez_and_symbol.csv'))
+    df_entrez_symbol = pd.read_csv(os.path.join(src.DIR_DATA_PROCESSED, species, source, 'entrez_and_symbol.csv'))
     print(df_entrez_symbol.shape)
     print(df_entrez_symbol.head())
     
     print('Checking NA values, number of NA values, ', len(df_entrez_symbol.loc[df_entrez_symbol['symbol'].isna()]))
     
     
-    for i_pathway in sorted(glob.glob(os.path.join(st.DIR_DATA_PROCESSED, species, source, 'details/*gene_list.txt'))):
+    for i_pathway in sorted(glob.glob(os.path.join(src.DIR_DATA_PROCESSED, species, source, 'details/*gene_list.txt'))):
         # Reading selected pathways which shows the gene relation for each circuits
         df_i_pathway = pd.read_csv(i_pathway, index_col=0).fillna(value=0)
         # Replace columns names which is circuit name with pathway name
@@ -55,8 +54,8 @@ def create_biological_layer(species, source):
     df_entrez_symbol.drop(columns=['gene_id'], inplace=True)
 
     # EXPORTING - the prior biological knowledge layer
-    print('The prior biological knowledge layer EXPORTED!! - {}'.format(os.path.join(st.DIR_DATA_PROCESSED, species, source, 'bio_layer_'+species+'.txt')))
-    df_entrez_symbol.to_csv(os.path.join(st.DIR_DATA_PROCESSED, species, source, 'bio_layer_'+species+'.txt'), index=False)
+    print('The prior biological knowledge layer EXPORTED!! - {}'.format(os.path.join(src.DIR_DATA_PROCESSED, species, source, 'bio_layer_'+species+'.txt')))
+    df_entrez_symbol.to_csv(os.path.join(src.DIR_DATA_PROCESSED, species, source, 'bio_layer_'+species+'.txt'), index=False)
     print(df_entrez_symbol.shape)
 if __name__=='__main__':
     

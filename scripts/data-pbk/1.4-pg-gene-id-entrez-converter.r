@@ -1,23 +1,21 @@
 #!/usr/bin/env Rscript
 
-"
-DESCRIPTION
------------
-    Converting entrex id value into gene symbol
+# DESCRIPTION
+# -----------
+#     Converting entrex id value into gene symbol
 
-USAGE 
------
-    [PROJECT_PATH]/$ Rscript src/data/1.4-pg-gene-id-entrez-converter.r -sp {SPECIES} -src {SOURCE} -ga {GENOME_ANNOTATION}
+# USAGE 
+# -----
+#     [PROJECT_PATH]/$ Rscript src/data/1.4-pg-gene-id-entrez-converter.r -sp {SPECIES} -src {SOURCE} -ga {GENOME_ANNOTATION}
 
-RETURN
-------
-    entrez_and_symbol.csv : csv file
-        entrez id and gene symbol conversion
+# RETURN
+# ------
+#     entrez_and_symbol.csv : csv file
+#         entrez id and gene symbol conversion
 
-EXPORTED FILE(s) LOCATION
--------------------------
-    ./data/processed/hsa/hipathia/entrez_and_symbol.csv
-"
+# EXPORTED FILE(s) LOCATION
+# -------------------------
+#     ./data/processed/hsa/hipathia/entrez_and_symbol.csv
 
 library(package = 'argparse', quietly = TRUE) # getting given argument
 
@@ -33,7 +31,7 @@ gene_id_entrez_converter <- function(species, source, genome_annotation){
     use_virtualenv("gpu_env")
 
     # importing py script
-    loaded_script<-py_run_file('./scripts/settings.py')
+    loaded_script<-py_run_file('./scripts/config.py')
     po <- py_run_file(file.path(loaded_script$DIR_CONFIG, 'path_scripts.py'))
 
     # creating output folders

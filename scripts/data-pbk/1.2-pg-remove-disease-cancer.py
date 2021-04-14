@@ -23,17 +23,17 @@ EXPORTED FILE(s) LOCATION
 import os, argparse, sys
 sys.path.append('./')
 # importing scripts in scripts folder
-from scripts import settings as ssrp, dataset_scripts as xdsrp, path_scripts as psrp, model_scripts as msrp
+from scripts import config as src
 import pandas as pd
 import numpy as np
 
 def remove_disease_from_dataset(species, source):
 
     # defining output folder
-    output_folder = psrp.define_folder( os.path.join(ssrp.DIR_DATA_PROCESSED, species, source ) )
+    output_folder = src.define_folder( os.path.join(src.DIR_DATA_PROCESSED, species, source ) )
     
     # importing raw dataset which is imported by hipathia
-    df_hp = pd.read_csv(os.path.join(ssrp.DIR_DATA_RAW, species, source, 'pathway_ids_and_names.csv'))
+    df_hp = pd.read_csv(os.path.join(src.DIR_DATA_RAW, species, source, 'pathway_ids_and_names.csv'))
     print('RAW dataset,')
     print('.head()', df_hp.head())
     print('Shape,', df_hp.shape)
