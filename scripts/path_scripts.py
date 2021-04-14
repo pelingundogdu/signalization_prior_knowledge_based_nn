@@ -22,8 +22,13 @@ def define_folder(loc_):
     """
 #     checking if there is any mistake with '/' sign
 #     print(loc_)
+<<<<<<< HEAD
     prefix=''
     if loc_[0] == '/':
+=======
+    prefix = ''
+    if loc_[0]=='/':
+>>>>>>> develop
         prefix='/'
     loc_ = [x for x in loc_.split('/') if x != '']
     loc_ = '/'.join(loc_)
@@ -38,6 +43,7 @@ def define_folder(loc_):
             path_ = path_+s_+'/'
 #             checking the existence of location, if it does not exist, it creates the folder in order to given loc_ information
             if os.path.exists(path_)==False:
+<<<<<<< HEAD
                 os.mkdir(path_)
                 count = count+1
             
@@ -45,6 +51,15 @@ def define_folder(loc_):
             print('PATH created!!')
         
         print('FOLDER information!, ', path_)
+=======
+                count=count+1
+                os.mkdir(path_)
+        
+        if count >0:
+            print('PATH created!!')
+        
+        print('FOLDER information, ', path_)
+>>>>>>> develop
     
     return(path_)
 

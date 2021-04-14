@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 **DATASET**
 
 <p><small>dataset link, https://drive.google.com/drive/folders/1qtCAPsPMznjMZ57BscAFgd-8Cnq9KnU3?usp=sharing
@@ -12,6 +13,13 @@ the data folder should be located outside of the project ../00_data/signalizatio
 
 ------------
 
+=======
+
+
+https://trello.com/b/ivgekKYB/draft
+------------
+
+>>>>>>> develop
 
 Project Organization
 ------------
