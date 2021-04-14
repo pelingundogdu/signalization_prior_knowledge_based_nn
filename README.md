@@ -1,25 +1,7 @@
-<<<<<<< HEAD
-**DATASET**
-
-<p><small>dataset link, https://drive.google.com/drive/folders/1qtCAPsPMznjMZ57BscAFgd-8Cnq9KnU3?usp=sharing
-
-the data folder should be located outside of the project ../00_data/signalization_prior_knowledge_based_nn</small></p>
-
-------------
-
-
-**TRELLO**
-<p><small>https://trello.com/b/ivgekKYB/draft</small></p>
-
-------------
-
-=======
-
 
 https://trello.com/b/ivgekKYB/draft
 ------------
 
->>>>>>> develop
 
 Project Organization
 ------------
@@ -30,17 +12,14 @@ Project Organization
     │
     ├── README.md                      <- The top-level README for developers using this project.
     │
-<<<<<<< HEAD
-    ├── data (EXTERNAL)
-=======
-    ├── data
->>>>>>> 9a03402b32795a1d17f70ecf7e16785dba3b3525
+    ├── ../data
     │   ├── external                   <- Data from third party sources.
+    │   ├── interim                    <- Intermediate data that has been transformed.
     │   ├── processed                  <- The final, canonical data sets for modeling.
     │   └── raw                        <- The original, immutable data dump.
     │
-    ├── models
-    │   ├── NN                         <- Trained models for model predictions, or model summaries
+    ├── models                         <- Trained and serialized models, model predictions, or model summaries
+    │   ├── NN                         <- training and testing models
     │   └── CV                         <- cross-validation performance result
     │
     ├── notebooks                      <- Jupyter notebooks. Naming convention is a number (for ordering),
@@ -58,11 +37,11 @@ Project Organization
     │
     └── scripts
         ├── data-pbk                   <- prior biological knowledge from hipathia
-        ├── config.py                <- the main script file
         ├── dataset_scripts.py         <- scripts for dataset modificiation
         ├── model_scripts.py           <- scripts for getting tarined model
         ├── nn_desing_scripts.py       <- scripts for proposed NN
         ├── path_scripts.py            <- scripts for location 
+        ├── settings.py                <- the main script file
         └── visualization_scripts.py   <- scripts for visualization
     
 
