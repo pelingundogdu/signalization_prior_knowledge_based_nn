@@ -22,18 +22,28 @@ def define_folder(loc_):
     """
 #     checking if there is any mistake with '/' sign
 #     print(loc_)
+    prefix = ''
+    if loc_[0]=='/'
+        prefix='/'
     loc_ = [x for x in loc_.split('/') if x != '']
     loc_ = '/'.join(loc_)
+    loc_ = prefix+loc_
 #     returning message if the given information is different than folder.
     if (loc_.split('/')[-1].find('.')>0==False):
         print('PLEASE ENTER FOLDER PATH!!, given information is ',loc_)
     else:
         path_ = ''
+        count = 0
         for s_ in loc_.split('/'):
             path_ = path_+s_+'/'
 #             checking the existence of location, if it does not exist, it creates the folder in order to given loc_ information
             if os.path.exists(path_)==False:
-                print('PATH created!!, ', path_)
+                count=count+1
                 os.mkdir(path_)
+        
+        if count >0:
+            print('PATH created!!')
+        
+        print('FOLDER information, ', path)
     
     return(path_)
