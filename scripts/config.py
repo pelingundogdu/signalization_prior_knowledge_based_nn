@@ -7,7 +7,6 @@ DIR_ROOT = os.path.dirname(os.path.abspath('__file__'))
 
 os.chdir(DIR_ROOT)
 sys.path.append(DIR_ROOT)
-# DIR_CONFIG = os.path.dirname(os.path.abspath('__file__'))
 DIR_CONFIG = os.path.join(DIR_ROOT,'scripts')
 # DIR_ROOT_BACK = os.path.dirname(DIR_ROOT)
 # DIR_DATA = os.path.join(DIR_ROOT_BACK,'00_data',os.path.basename(DIR_ROOT))
