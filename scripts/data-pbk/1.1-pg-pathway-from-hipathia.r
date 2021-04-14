@@ -1,23 +1,22 @@
 #!/usr/bin/env Rscript
 
-"
-DESCRIPTION
------------
-    Exporting signaling pathway information from hipathia.
 
-USAGE 
------
-    [PROJECT_PATH]/$ Rscript src/data/1.1-pg-pathway-from-hipathia.r -sp {SPECIES} -src {SOURCE}
+# DESCRIPTION
+# -----------
+#     Exporting signaling pathway information from hipathia.
 
-RETURN
-------
-    pathway_ids_and_names.csv : csv file
-        The information about pathway id and pathway name 
+# USAGE 
+# -----
+#     [PROJECT_PATH]/$ Rscript src/data/1.1-pg-pathway-from-hipathia.r -sp {SPECIES} -src {SOURCE}
 
-EXPORTED FILE(s) LOCATION
--------------------------
-    ./data/raw/hsa/hipathia/pathway_ids_and_names.csv
-"
+# RETURN
+# ------
+#     pathway_ids_and_names.csv : csv file
+#         The information about pathway id and pathway name 
+
+# EXPORTED FILE(s) LOCATION
+# -------------------------
+#     ./data/raw/hsa/hipathia/pathway_ids_and_names.csv
 
 library(package = 'argparse', quietly = TRUE) # getting given argument
 
@@ -33,12 +32,12 @@ pathway_from_hipathia <- function(species, source){
     use_virtualenv("gpu_env")
 
     # importing py script
-    loaded_script<-py_run_file('./scripts/settings.py')
+    loaded_script<-py_run_file('./scripts/config.py')
     po <- py_run_file(file.path(loaded_script$DIR_CONFIG, 'path_scripts.py'))
 
     # create ../data/input/pathways/ folder
     output_folder = po$define_folder(file.path(loaded_script$DIR_DATA_RAW, species, source))
-
+    print(output_folder)
     # loading pathways 
     pathways <- load_pathways(species = species)
     df_pathways = data.frame(pathways$all.labelids)

@@ -23,7 +23,7 @@ def define_folder(loc_):
 #     checking if there is any mistake with '/' sign
 #     print(loc_)
     prefix = ''
-    if loc_[0]=='/'
+    if loc_[0]=='/':
         prefix='/'
     loc_ = [x for x in loc_.split('/') if x != '']
     loc_ = '/'.join(loc_)
@@ -44,6 +44,6 @@ def define_folder(loc_):
         if count >0:
             print('PATH created!!')
         
-        print('FOLDER information, ', path)
+        print('FOLDER information, ', path_)
     
     return(path_)

@@ -1,7 +1,8 @@
-doc_p1
-==============================
 
-Single-cell RNA-seq data with pathways knowledge integrated in NN.
+
+https://trello.com/b/ivgekKYB/draft
+------------
+
 
 Project Organization
 ------------
