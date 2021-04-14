@@ -1,20 +1,5 @@
 #!/usr/bin/env Rscript
 
-<<<<<<< HEAD
-# DESCRIPTION
-# -----------
-#     Exporting signaling pathway information from hipathia.
-
-# USAGE 
-# -----
-#     [PROJECT_PATH]/$ Rscript src/data/1.1-pg-pathway-from-hipathia.r -sp {SPECIES} -src {SOURCE}
-
-# RETURN
-# ------
-#     pathway_ids_and_names.csv : csv file
-#         The information about pathway id and pathway name 
-
-=======
 
 # DESCRIPTION
 # -----------
@@ -29,7 +14,6 @@
 #     pathway_ids_and_names.csv : csv file
 #         The information about pathway id and pathway name 
 
->>>>>>> develop
 # EXPORTED FILE(s) LOCATION
 # -------------------------
 #     ./data/raw/hsa/hipathia/pathway_ids_and_names.csv
@@ -44,20 +28,16 @@ pathway_from_hipathia <- function(species, source){
 
     print(paste0('hipathia pathways are exporting for ', species))
     # Enabling Python environment
-#     use_python("/opt/anaconda3/bin/python")
+    # use_python("/opt/anaconda3/bin/python")
     use_virtualenv("gpu_env")
 
     # importing py script
     loaded_script<-py_run_file('./scripts/config.py')
     po <- py_run_file(file.path(loaded_script$DIR_CONFIG, 'path_scripts.py'))
-    
+
     # create ../data/input/pathways/ folder
     output_folder = po$define_folder(file.path(loaded_script$DIR_DATA_RAW, species, source))
-<<<<<<< HEAD
-    
-=======
     print(output_folder)
->>>>>>> develop
     # loading pathways 
     pathways <- load_pathways(species = species)
     df_pathways = data.frame(pathways$all.labelids)

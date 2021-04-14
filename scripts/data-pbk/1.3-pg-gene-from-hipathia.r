@@ -1,24 +1,26 @@
 #!/usr/bin/env Rscript
 
-# DESCRIPTION
-# -----------
-#     Exporting gene list of signaling pathway from hipathia.
+"
+DESCRIPTION
+-----------
+    Exporting gene list of signaling pathway from hipathia.
 
-# USAGE 
-# -----
-#     [PROJECT_PATH]/$ Rscript src/data/1.3-pg-gene-from-hipathia.r -sp {SPECIES} -src {SOURCE}
+USAGE 
+-----
+    [PROJECT_PATH]/$ Rscript src/data/1.3-pg-gene-from-hipathia.r -sp {SPECIES} -src {SOURCE}
 
-# RETURN
-# ------
-#     gene_list_all.csv : csv file
-#         The gene information of all pathways
-#     gene_list.csv     : csv file
-#         The gene information of pathway which removed disease related ones
+RETURN
+------
+    gene_list_all.csv : csv file
+        The gene information of all pathways
+    gene_list.csv     : csv file
+        The gene information of pathway which removed disease related ones
 
-# EXPORTED FILE(s) LOCATION
-# -------------------------
-#     ./data/raw/hsa/hipathia/gene_list_all.csv
-#     ./data/processed/hsa/hipathia/gene_list.csv
+EXPORTED FILE(s) LOCATION
+-------------------------
+    ./data/raw/hsa/hipathia/gene_list_all.csv
+    ./data/processed/hsa/hipathia/gene_list.csv
+"
 
 library(package = 'argparse', quietly = TRUE) # getting given argument
 
@@ -33,7 +35,7 @@ gene_from_hipathia <- function(species, source){
     use_virtualenv("gpu_env")
 
     # importing py script
-    loaded_script<-py_run_file('./scripts/config.py')
+    loaded_script<-py_run_file('./scripts/settings.py')
     po <- py_run_file(file.path(loaded_script$DIR_CONFIG, 'path_scripts.py'))
 
     # creating output folders

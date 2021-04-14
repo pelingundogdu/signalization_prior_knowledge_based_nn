@@ -20,28 +20,28 @@ date
 # python config/settings.py
 
 # Exporting signaling pathway information from hipathia
-# Rscript scripts/data-pbk/1.1-pg-pathway-from-hipathia.r -sp hsa -src hipathia
-# Rscript scripts/data-pbk/1.1-pg-pathway-from-hipathia.r -sp mmu -src hipathia
+# Rscript src/data/1.1-pg-pathway-from-hipathia.r -sp hsa -src hipathia
+# Rscript src/data/1.1-pg-pathway-from-hipathia.r -sp mmu -src hipathia
 echo "Script 1.1-pg-pathway-from-hipathia.r executed!!"
 
 # Processing the pathway list, removing disease related pathways
-# python scripts/data-pbk/1.2-pg-remove-disease-cancer.py -sp hsa -src hipathia
-# python scripts/data-pbk/1.2-pg-remove-disease-cancer.py -sp mmu -src hipathia
+# python src/data/1.2-pg-remove-disease-cancer.py -sp hsa -src hipathia
+# python src/data/1.2-pg-remove-disease-cancer.py -sp mmu -src hipathia
 echo "Script 1.2-pg-remove-disease-cancer.py executed!!"
 
 # Exporting gene list based on processed pathway list in 1.2-pg-remove-disease-cancer.py
-# Rscript scripts/data-pbk/1.3-pg-gene-from-hipathia.r -sp hsa -src hipathia
-# Rscript scripts/data-pbk/1.3-pg-gene-from-hipathia.r -sp mmu -src hipathia
+# Rscript src/data/1.3-pg-gene-from-hipathia.r -sp hsa -src hipathia
+# Rscript src/data/1.3-pg-gene-from-hipathia.r -sp mmu -src hipathia
 echo "Script 1.3-pg-gene-from-hipathia.r executed!!"
 
 # Converting entrex id value into gene symbol
-# Rscript scripts/data-pbk/1.4-pg-gene-id-entrez-converter.r -sp hsa -src hipathia -ga org.Hs.eg.db
-# Rscript scripts/data-pbk/1.4-pg-gene-id-entrez-converter.r -sp mmu -src hipathia -ga org.Mm.eg.db
+# Rscript src/data/1.4-pg-gene-id-entrez-converter.r -sp hsa -src hipathia -ga org.Hs.eg.db
+# Rscript src/data/1.4-pg-gene-id-entrez-converter.r -sp mmu -src hipathia -ga org.Mm.eg.db
 echo "Script 1.4-pg-gene-id-entrez-converter.r executed!!"
 
 # Creating prior biological knowledge information to include the nn design in first hidden layer 
-# python scripts/data-pbk/1.5-pg-creating-biological-layer.py -sp hsa -src hipathia
-# python scripts/data-pbk/1.5-pg-creating-biological-layer.py -sp mmu -src hipathia
+# python src/data/1.5-pg-creating-biological-layer.py -sp hsa -src hipathia
+# python src/data/1.5-pg-creating-biological-layer.py -sp mmu -src hipathia
 echo "Script 1.5-pg-creating-biological-layer.py executed!!"
 
 echo "COMPLETE EXTERNAL DATA SOURCE OPERTATION!!!"
