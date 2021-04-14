@@ -22,7 +22,11 @@ Project Organization
     │
     ├── README.md                      <- The top-level README for developers using this project.
     │
+<<<<<<< HEAD
     ├── data (EXTERNAL)
+=======
+    ├── data
+>>>>>>> 9a03402b32795a1d17f70ecf7e16785dba3b3525
     │   ├── external                   <- Data from third party sources.
     │   ├── processed                  <- The final, canonical data sets for modeling.
     │   └── raw                        <- The original, immutable data dump.
