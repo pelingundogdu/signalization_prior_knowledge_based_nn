@@ -1,13 +1,15 @@
-################################################################################
-data_org/external/
-data_org/processed/
-data_org/raw/
+#################################### REMOVING ####################################
+data/
 data_/
 nohup/
 project_tree.ipynb
 notebooks/red_green.ipynb
 notebooks/Untit*.ipynb
 
+#################################### KEEPING ####################################
+!data/*/.gitkeep
+#!data/processed/.gitkeep
+#!data/raw/.gitkeep
 
 #################################### DEFAULT ####################################
 # Byte-compiled / optimized / DLL files
