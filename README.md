@@ -17,7 +17,7 @@ Project Organization
     │   ├── processed                  <- The final, canonical data sets for modeling.
     │   └── raw                        <- The original, immutable data dump.
     │
-    ├── models                         <- Trained and serialized models, model predictions, or model summaries
+    ├── models                         <- Trained models, model predictions, or model summaries
     │   ├── NN                         <- training and testing models
     │   └── CV                         <- cross-validation performance result
     │
