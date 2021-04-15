@@ -1,3 +1,13 @@
+################################################################################
+data/
+data_/
+nohup/
+project_tree.ipynb
+notebooks/red_green.ipynb
+notebooks/Untit*.ipynb
+
+
+#################################### DEFAULT ####################################
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,11 +137,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-################################################################################
-data/
-data_/
-nohup/
-project_tree.ipynb
-
-
