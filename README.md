@@ -22,10 +22,10 @@ Project Organization
     │   └── CV                         <- cross-validation performance result
     │
     ├── notebooks                      <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                                     the creator's initials, and a short `-` delimited description, e.g.
-    │                                     `1.0-jqp-initial-data-exploration`.
+    │                                     the creator's initials, and a short `-` delimited description, 
+    │                                      e.g. `1.0-jqp-initial-data-exploration`
     │
-    ├── references                     <- Data dictionaries, manuals, and all other explanatory materials.
+    ├── references                     <- Data dictionaries, manuals, and all other explanatory materials
     │
     ├── reports                        <- Generated analysis as HTML, PDF, LaTeX, etc.
     │   ├── activation                 <- pathways activation results
