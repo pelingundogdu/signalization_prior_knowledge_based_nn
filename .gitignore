@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+################################################################################
+data/
+data_/
+nohup/
+project_tree.ipynb
+
+
