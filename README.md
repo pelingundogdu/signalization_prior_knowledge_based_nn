@@ -37,11 +37,11 @@ Project Organization
     │
     └── scripts
         ├── data-pbk                   <- prior biological knowledge from hipathia
+        ├── config.py                  <- the main script file
         ├── dataset_scripts.py         <- scripts for dataset modificiation
         ├── model_scripts.py           <- scripts for getting tarined model
         ├── nn_desing_scripts.py       <- scripts for proposed NN
         ├── path_scripts.py            <- scripts for location 
-        ├── settings.py                <- the main script file
         └── visualization_scripts.py   <- scripts for visualization
     
 
