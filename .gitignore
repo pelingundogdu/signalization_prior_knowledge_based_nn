@@ -1,5 +1,7 @@
 ################################################################################
-data/
+data/external/
+data/processed/
+data/raw/
 data_/
 nohup/
 project_tree.ipynb
