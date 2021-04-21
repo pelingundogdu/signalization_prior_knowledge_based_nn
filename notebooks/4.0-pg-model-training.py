@@ -30,7 +30,7 @@ EXPORTED FILE(s) LOCATION
 import os, argparse, sys
 sys.path.append('./')
 # importing scripts in scripts folder
-from scripts import settings as srp
+from scripts import config as src
 
 import numpy as np
 import pandas as pd
@@ -58,15 +58,15 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
     print(save_model)
     
     if location == 'external':
-        loc_ds = srp.DIR_DATA_EXTERNAL
+        loc_ds = src.DIR_DATA_EXTERNAL
     elif location == 'processed':
-        loc_ds = srp.DIR_DATA_PROCESSED
+        loc_ds = src.DIR_DATA_PROCESSED
     else:
         print('please give a valid location!!!')
     
     # the output location
-    loc_output = os.path.join(srp.DIR_MODELS, nn_cv, experiment)
-    srp.define_folder(loc_=loc_output)
+    loc_output = os.path.join(src.DIR_MODELS, nn_cv, experiment)
+    src.define_folder(loc_=loc_output)
     
     print('FILE FORMAT, ', dataset.split('.')[1])
     if dataset.split('.')[1]=='pck':
@@ -83,7 +83,7 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
     # Importing all prior biological knowledge and combine all genes to create a common gene list
     list_gene = None
     if (bio_knowledge!=None):
-        df_bio = pd.DataFrame(pd.read_csv(os.path.join(srp.DIR_DATA_PROCESSED, bio_knowledge), index_col=0)).sort_index()
+        df_bio = pd.DataFrame(pd.read_csv(os.path.join(src.DIR_DATA_PROCESSED, bio_knowledge), index_col=0)).sort_index()
         df_bio_filtered = df_bio.iloc[df_bio.index.isin(df_raw.columns), :]
 
     del(df_bio)
@@ -145,7 +145,7 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
         print('EXPERIMENT --- '+str(i+1)+'/'+str(len(X_train)))
 #         1-Layer with biological layer design
         time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
-        model_a1 = srp.nn.proposed_NN(X=X, y=y, bio_layer=df_bio_filtered, design_type='bio')
+        model_a1 = src.proposed_NN(X=X, y=y, bio_layer=df_bio_filtered, design_type='bio')
         model_a1.fit(X_train[i], y_train[i]
                   , epochs=epochs_default
                   , batch_size=batch_default
@@ -173,7 +173,7 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
         
 #         2-Layer with biological layer design
         time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
-        model_a2 = srp.nn.proposed_NN(X=X, y=y, bio_layer=df_bio_filtered, design_type='bio', second_layer=True)
+        model_a2 = src.proposed_NN(X=X, y=y, bio_layer=df_bio_filtered, design_type='bio', second_layer=True)
         model_a2.fit(X_train[i], y_train[i]
                   , epochs=epochs_default
                   , batch_size=batch_default
