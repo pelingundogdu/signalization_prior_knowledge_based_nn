@@ -24,7 +24,7 @@ plt.rc('xtick', labelsize=TINY_SIZE)     # fontsize of the tick labels
 plt.rc('ytick', labelsize=TINY_SIZE)     # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('legend', title_fontsize=SMALL_SIZE)    # legend fontsize
-plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
 def heatmap_cv(dataframe_crosstab, title):
@@ -72,44 +72,52 @@ def heatmap_cv(dataframe_crosstab, title):
     return g.get_figure()
 
 
-# def plot_pathways(df, title, caption, png, axes):
-#     sns.boxplot(x="variable", y="value", data=df, ax=axes)
-#     fig, ax = plt.subplots(figsize=(10,5))
-#     sns.boxplot(x="variable", y="value", data=df, ax=ax)
-#     plt.xlabel('genes')
-#     plt.ylabel('expression value')
-#     plt.xticks(rotation=45)
-#     plt.title(title);
-# #     plt.text(.45, .1, caption, ha='center', size=BIGGER_SIZE)
-#     plt.figtext(0.5, -0.01, caption, wrap=True, horizontalalignment='center', fontsize=MEDIUM_SIZE)
-#     plt.xticks([])
-#     plt.tight_layout()
-#     # plt.show()
-#     plt.savefig(os.path.join(loc_output, png), dpi=300, bbox_inches = 'tight');
-#     plt.close(fig)
+def plot_expression_and_sum(df, title, random_genes, png=None, output=None):
+#     df['sum'] = df.iloc[:, :-1].sum(axis=1)
+    fig, axes = plt.subplots(ncols=2, figsize=(15,5))
+#     plt.figure(figsize=(10,5))
+    sns.distplot(df.iloc[:, :-1].sum(axis=1), ax=axes[0])
+#     sns.displot(pd.melt(df[random_genes]), x='value', hue='variable', kind='kde', legend=False)
+    df_melt = pd.melt(df[random_genes])
+    my_order = df_melt.groupby(by=['variable'])['value'].median().sort_values(ascending=False).index
+    sns.boxplot(x="variable", y="value", data=df_melt, order=my_order, ax=axes[1])
+#     plt.title('randomly selected 50 genes - ordered by mean')
+    axes[0].set_title('distribution of gene expression of each samples')
+    axes[0].set_yticks([])
     
-def plot_pathways(df, title, caption, axes, save, output, png):
-    sns.boxplot(x="variable", y="value", data=df, ax=axes)
-    axes.set_xlabel('genes')
-    axes.set_ylabel('expression value')
-    axes.set_xticks([])
-#     axes.tick_params(axis='y', labelsize=8)
-#     axes.tick_params(axis='x', labelsize=8)
-    axes.set_title(caption,fontsize=SMALL_SIZE)
+    axes[1].set_title('randomly selected 50 genes - ordered by mean')
+    axes[1].set_xlabel('genes')
+    axes[1].set_ylabel('expression value')
+    axes[1].set_xticks([])
     
-    if (save==True):
-        fig, ax = plt.subplots(figsize=(10,5))
-        sns.boxplot(x="variable", y="value", data=df, ax=ax)
-        plt.xlabel('genes')
-        plt.ylabel('expression value')
-#         plt.xticks(rotation=45)
-        plt.title(title);
-    #     plt.text(.45, .1, caption, ha='center', size=BIGGER_SIZE)
-        plt.figtext(0.5, -0.01, caption, wrap=True, horizontalalignment='center', fontsize=MEDIUM_SIZE)
-        plt.xticks([])
-        plt.tight_layout();
-        # plt.show()
+    plt.tight_layout(pad=3, w_pad=0.5, h_pad=2.0)
+    fig.suptitle(title)
+    if png != None:
         plt.savefig(os.path.join(output, png), dpi=300, bbox_inches = 'tight');
-        plt.close(fig);
         print('EXPORTED!!, ', os.path.join(output, png))
+    
+# def plot_pathways(df, title, caption, axes, save, output, png):
+#     sns.boxplot(x="variable", y="value", data=df, ax=axes)
+#     axes.set_xlabel('genes')
+#     axes.set_ylabel('expression value')
+#     axes.set_xticks([])
+# #     axes.tick_params(axis='y', labelsize=8)
+# #     axes.tick_params(axis='x', labelsize=8)
+#     axes.set_title(caption,fontsize=SMALL_SIZE)
+    
+#     if (save==True):
+#         fig, ax = plt.subplots(figsize=(10,5))
+#         sns.boxplot(x="variable", y="value", data=df, ax=ax)
+#         plt.xlabel('genes')
+#         plt.ylabel('expression value')
+# #         plt.xticks(rotation=45)
+#         plt.title(title);
+#     #     plt.text(.45, .1, caption, ha='center', size=BIGGER_SIZE)
+#         plt.figtext(0.5, -0.01, caption, wrap=True, horizontalalignment='center', fontsize=MEDIUM_SIZE)
+#         plt.xticks([])
+#         plt.tight_layout();
+#         # plt.show()
+#         plt.savefig(os.path.join(output, png), dpi=300, bbox_inches = 'tight');
+#         plt.close(fig);
+#         print('EXPORTED!!, ', os.path.join(output, png))
     
