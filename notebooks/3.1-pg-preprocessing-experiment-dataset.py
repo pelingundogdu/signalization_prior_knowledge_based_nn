@@ -28,7 +28,7 @@ EXPORTED FILE(s) LOCATION
 import os, argparse, sys
 sys.path.append('./')
 # importing scripts in scripts folder
-from scripts import settings as ssrp, dataset_scripts as dsrp, path_scripts as psrp, model_scripts as msrp
+from scripts import config as src
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import *
@@ -39,18 +39,18 @@ def preprocessing_dataset(experiment, location, dataset, bio_knowledge, scale, t
     # Importing all prior biological knowledge and combine all genes to create a common gene list
     list_gene = None
     if (bio_knowledge!=None):
-        df_bio = pd.DataFrame(pd.read_csv(os.path.join(ssrp.DIR_DATA_PROCESSED, bio_knowledge)))
+        df_bio = pd.DataFrame(pd.read_csv(os.path.join(src.DIR_DATA_PROCESSED, bio_knowledge)))
         list_gene = list(df_bio['symbol'])
     
     if location == 'external':
-        loc_ds = ssrp.DIR_DATA_EXTERNAL
+        loc_ds = src.DIR_DATA_EXTERNAL
     elif location == 'processed':
-        loc_ds = ssrp.DIR_DATA_PROCESSED
+        loc_ds = src.DIR_DATA_PROCESSED
     else:
         print('please give a valid location!!!')
     # the output location
-    loc_output = os.path.join(ssrp.DIR_DATA_PROCESSED, experiment)
-    psrp.define_folder(loc_=loc_output)
+    loc_output = os.path.join(src.DIR_DATA_PROCESSED, experiment)
+    src.define_folder(loc_=loc_output)
     
     if scale == None:
         sc_text = 'no_scale'
@@ -72,7 +72,7 @@ def preprocessing_dataset(experiment, location, dataset, bio_knowledge, scale, t
         df_raw = pd.read_csv(os.path.join(loc_ds, experiment, dataset))
 
     # Importing experiment dataset
-    df = dsrp.ExperimentDataSet(experiment_dataset=df_raw
+    df = src.ExperimentDataSet(experiment_dataset=df_raw
                                 , target_col_index=target_column_index
                                 , filter_gene=list_gene
                                 , scaler=scale).run()

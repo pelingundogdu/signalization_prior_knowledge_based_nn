@@ -68,6 +68,7 @@ echo "PREPROCESSING of EXPERIMENT IMMUNE DATASET"
 # python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_immune -loc processed -ds exper_immune_raw_sw.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
 
 
+python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_immune -loc processed -ds Fig3g_sw.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
 
 echo "NEURAL NETWORK TRAINING"
 echo "NEURAL NETWORK TRAINING for HUMAN EXPERIMENT"
