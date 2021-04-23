@@ -68,7 +68,7 @@ echo "PREPROCESSING of EXPERIMENT IMMUNE DATASET"
 # python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_immune -loc processed -ds exper_immune_raw_sw.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
 
 
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_immune -loc processed -ds Fig3g_sw.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
+# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_immune -loc external -ds Fig3g.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
 
 echo "NEURAL NETWORK TRAINING"
 echo "NEURAL NETWORK TRAINING for HUMAN EXPERIMENT"
@@ -98,7 +98,10 @@ echo "MOUSE"
 echo "IMMUNE"
 # python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds exper_immune_raw_sw_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
 
-python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds Fig3g_sw_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
+python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds Fig3g_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
+
+python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds Fig3g_log1p.pck -pbk pbk_layer_hsa.txt -split StratifiedKFold -nncv NN -model True
+
 
 echo "LocalOutlierFactor Analysis"
 # python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
