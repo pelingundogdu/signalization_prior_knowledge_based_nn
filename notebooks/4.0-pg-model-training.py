@@ -36,21 +36,19 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.model_selection import KFold, train_test_split, LeaveOneGroupOut
+from sklearn.model_selection import StratifiedKFold, train_test_split, LeaveOneGroupOut
 
 from numba import cuda
 import tensorflow as ts
 from tensorflow import keras
 
 # DEFAULT VALUES
-epochs_default=100
-batch_default=10
-val_split=0.1
-
-rand_state = 91
-shuffle_=True
-test_size = 0.3 # train_test_split
-kf_split = 5 # KFold
+epochs_default=100 # for model design
+batch_default=10   # for model design
+val_split=0.1      # for model design
+rand_state = 91    # dataset split
+test_size = 0.3    # train_test_split
+kf_split = 5       # KFold
 
 def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save_model):
     time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time() dt.datetime.now().strftime('%Y%m%d_%I%M%S%p')
@@ -102,10 +100,10 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
     
     X_train, y_train, X_test, y_test = [], [], [], []
 
-    if split == 'KFold':
-        kf = KFold(n_splits=kf_split, shuffle=shuffle_ , random_state=rand_state)
+    if split == 'StratifiedKFold':
+        kf = StratifiedKFold(n_splits=kf_split, shuffle=True, random_state=rand_state)
         print('KFold split applied!! The number of KFold is {}'.format(kf.get_n_splits()))
-        for train_index, test_index in kf.split(X, y): # so.split(X, y)
+        for train_index, test_index in kf.split(X, y):
             print(train_index, len(train_index))
 
             X_train.append(X[train_index])
@@ -117,7 +115,7 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
     elif split=='train_test_split':
         print('train_test_split split applied! Test size is, ', test_size)
         Xtrain, Xtest, ytrain, ytest = train_test_split(X, y, test_size=test_size
-                                                        , shuffle=shuffle_
+                                                        , shuffle=True
                                                         , random_state=rand_state
                                                         , stratify=y_ohe)
 
@@ -132,7 +130,7 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
         X_train.append(X)
         y_train.append(y_ohe)
 
-    START_TRAINING = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
+    START_TRAINING = dt.datetime.now().time().strftime('%H:%M:%S')
     df_nn = pd.DataFrame()
     
     callbacks = [keras.callbacks.EarlyStopping(monitor="val_loss" # Stop training when `val_loss` is no longer improving
