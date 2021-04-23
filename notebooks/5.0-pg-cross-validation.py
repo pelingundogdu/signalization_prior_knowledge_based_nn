@@ -133,15 +133,15 @@ def cross_validation(experiment, location, dataset, bio_knowledge, nn_cv):
         
         print('EXPERIMENT --- '+str(i+1)+'/'+str(len(X_train)))
 #         1-Layer with biological layer design    
-#         model_a1, y_pred_a1 = nnsrp.NN_design(train_X=X_train[i]
-#                                               , train_y=y_train[i]
-#                                               , test_X=X_test[i]
-#                                               , groups=groups
-#                                               , bio_layer=df_bio_filtered
-#                                               , size_epochs=epochs_default
-#                                               , size_batch=batch_default
-#                                               , design_type='bio'
-#                                               , val_split=0.1)
+        model_a1, y_pred_a1 = nnsrp.NN_design(train_X=X_train[i]
+                                              , train_y=y_train[i]
+                                              , test_X=X_test[i]
+                                              , groups=groups
+                                              , bio_layer=df_bio_filtered
+                                              , size_epochs=epochs_default
+                                              , size_batch=batch_default
+                                              , design_type='bio'
+                                              , val_split=0.1)
 
         df_proba = pd.DataFrame(y_pred_a1, columns=list(pd.DataFrame(ohe.categories_).iloc[0,:]))
         df_pred = pd.DataFrame(ohe.inverse_transform(y_pred_a1).reshape(1,-1)[0], columns=['prediction'])
