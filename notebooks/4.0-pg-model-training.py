@@ -55,6 +55,8 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
     print(type(save_model))
     print(save_model)
     
+    split_index=''
+    
     if location == 'external':
         loc_ds = src.DIR_DATA_EXTERNAL
     elif location == 'processed':
@@ -138,8 +140,11 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
                                            , patience=3       # "no longer improving" being further defined as "for at least 3 epochs"
                                            , verbose=1 ) ]
     
+    
     for i in range(len(X_train)):
         
+        if len(X_train)>1:
+            split_index='_'+str(i+1)
         print('EXPERIMENT --- '+str(i+1)+'/'+str(len(X_train)))
 #         1-Layer with biological layer design
         time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
@@ -161,10 +166,6 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
             df_nn_a1['index_split'] = i
             df_nn_a1['split'] = split
             df_nn = pd.concat([df_nn, df_nn_a1])
-            
-        if save_model==False:
-            print('model_a1 deleted!!')
-            del(model_a1)
             
         time_end  = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
         print('\nELAPSED TIME, ', (dt.datetime.strptime(time_end,'%H:%M:%S') - dt.datetime.strptime(time_start,'%H:%M:%S')))
@@ -189,18 +190,18 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
             df_nn_a2['index_split'] = i
             df_nn_a2['split'] = split
             df_nn = pd.concat([df_nn, df_nn_a2])
-        
-        if save_model==False:
-            print('model_a2 deleted!!')
-            del(model_a2)
             
         time_end  = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
         print('\nELAPSED TIME, ', (dt.datetime.strptime(time_end,'%H:%M:%S') - dt.datetime.strptime(time_start,'%H:%M:%S')))
         
         if save_model==True:
-            model_a1.save(os.path.join(loc_output, 'model_a1_'+dataset.split('.')[0]+'_'+split+'_trained.h5'))
-            model_a2.save(os.path.join(loc_output, 'model_a2_'+dataset.split('.')[0]+'_'+split+'_trained.h5'))
+            model_a1.save(os.path.join(loc_output, 'model_a1_'+dataset.split('.')[0]+'_'+split+split_index+'_trained.h5'))
+            model_a2.save(os.path.join(loc_output, 'model_a2_'+dataset.split('.')[0]+'_'+split+split_index+'_trained.h5'))
     
+        print('Model a1 and a2 deleted!! - '+str(i+1)+'/'+str(len(X_train)))
+        del(model_a1)
+        del(model_a2)
+        
     END_TRAINING  = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
     print('ended in ', END_TRAINING)
     print('EXPERIMENT COMPLETED! Total time is, ', (dt.datetime.strptime(END_TRAINING,'%H:%M:%S') - dt.datetime.strptime(START_TRAINING,'%H:%M:%S')))
@@ -221,7 +222,7 @@ if __name__=='__main__':
     parser.add_argument('-pbk', '--bio_knowledge', help='specifying the biological knowledge dataset. None for keeping all genes')
     parser.add_argument('-split', '--split', help='specifying dataset split, etc, train_test_split or KFold')
     parser.add_argument('-nncv', '--nn_cv', help='specifying the model NN-training or cross-validation')
-    parser.add_argument('-model', '--save_model', help='exporting the trained model')
+    parser.add_argument('-save', '--save_model', help='exporting the trained model')
     
     
     if len(sys.argv)==1:
