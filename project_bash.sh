@@ -72,10 +72,12 @@ echo "PREPROCESSING of EXPERIMENT IMMUNE DATASET"
 
 echo "NEURAL NETWORK TRAINING"
 echo "NEURAL NETWORK TRAINING for HUMAN EXPERIMENT"
-# python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split KFold -nncv NN
+# python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split StratifiedKFold -nncv NN -save True
+# python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -save True
 
 echo "NEURAL NETWORK TRAINING for MOUSE EXPERIMENT"
 # python notebooks/4.0-pg-model-training.py -exp exper_mouse -loc processed -ds mouse_training_sw_StandardScaler.pck -pbk pbk_layer_mmu.txt -split KFold -nncv NN
+# python notebooks/4.0-pg-model-training.py -exp exper_mouse -loc processed -ds mouse_training_sw_StandardScaler.pck -pbk pbk_layer_mmu.txt -split train_test_split -nncv NN -save True
 
 echo "NEURAL NETWORK TRAINING for PBMC EXPERIMENT"
 ### python notebooks/4.0-pg-model-training.py -exp exper_pbmc -loc processed -ds Immune_magic_sw_log1p.pck -pbk pbk_layer_hsa.txt -split KFold -nncv NN
