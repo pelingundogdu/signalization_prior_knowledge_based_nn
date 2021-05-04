@@ -99,9 +99,9 @@ def proposed_NN(X, y, bio_layer, design_type, select_optimizer, **kwargs):
             model.add(keras.layers.Dense(size_output_layer, activation='softmax', name='layer3'))
             
             if select_optimizer == 'Adam':
-                optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999) # the parameter from paper 
+                optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
             elif select_optimizer == 'SGD':
-                optimizer = optimizers.SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True) # the parameter from paper 
+                optimizer = keras.optimizers.SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True) # the parameter from paper 
             else:
                 raise Exception('*** ERRROR in OPTIMIZER SELECTION, please select Adam or SGD')
                 
