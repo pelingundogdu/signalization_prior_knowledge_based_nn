@@ -7,12 +7,15 @@ DESCRIPTION
     
 USAGE
 -----
-    [PROJECT_PATH]/$ python notebooks/04-pg-model-training.py -exp   {EXPERIMENT}
-                                                              -loc   {DATASET LOCATION}
-                                                              -ds    {DATASET} 
-                                                              -pbk   {BIOLOGICAL KNOWLEDGE} 
-                                                              -split {DATASET SPLIT OPERATION}
-                                                              -nncv  {TRAINING or CROSS-VALIDATION}
+    [PROJECT_PATH]/$ python notebooks/04-pg-model-training.py -desing              {DESIGN NAME}
+                                                              -second_hidden_layer {SECOND HIDDEN LAYER}
+                                                              -ds                  {DATASET}
+                                                              -pbk                 {BIOLOGICAL KNOWLEDGE} 
+                                                              -dense               {NUMBER of DENSE LAYER}
+                                                              -split               {DATASET SPLIT OPERATION}
+                                                              -training_or_cv      {TRAINING or CROSS-VALIDATION}
+                                                              -optimizer           {OPTIMIZER}
+                                                              
 RETURN
 ------
     {MODEL}.h5 : h5 file
@@ -25,6 +28,12 @@ EXPORTED FILE(s) LOCATION
     ./models/NN/{EXPERIMENT}/{MODEL}.h5
     ./models/NN/{EXPERIMENT}/{MODEL-RESULT}.csv
 '''
+
+# to get reproducible results
+from numpy.random import seed
+seed(1)
+import tensorflow as tf
+tf.random.set_seed(2)
 
 # importing default libraries
 import os, argparse, sys
@@ -39,7 +48,6 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import StratifiedKFold, train_test_split, LeaveOneGroupOut
 
 from numba import cuda
-import tensorflow as ts
 from tensorflow import keras
 
 # DEFAULT VALUES
@@ -50,53 +58,63 @@ rand_state = 91    # dataset split
 test_size = 0.3    # train_test_split
 kf_split = 5       # KFold
 
-def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save_model):
+def NN_training(design_name, second_hidden_layer, dataset, bio_knowledge, dense_nodes, split, training_or_cv, optimizer, target_column):
     time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time() dt.datetime.now().strftime('%Y%m%d_%I%M%S%p')
-    print(type(save_model))
-    print(save_model)
-    
-    split_index=''
-    
-    if location == 'external':
-        loc_ds = src.DIR_DATA_EXTERNAL
-    elif location == 'processed':
-        loc_ds = src.DIR_DATA_PROCESSED
-    else:
-        print('please give a valid location!!!')
-    
+        
     # the output location
-    loc_output = os.path.join(src.DIR_MODELS, nn_cv, experiment)
+    loc_output = os.path.join(src.DIR_MODELS, training_or_cv, dataset.split('/')[1])
     src.define_folder(loc_=loc_output)
+    df_bio_org, df_dense = pd.DataFrame(), pd.DataFrame()
+    split_index=''
+    print(type(second_hidden_layer))
+    print(second_hidden_layer)
     
     print('FILE FORMAT, ', dataset.split('.')[1])
     if dataset.split('.')[1]=='pck':
-        df_raw = pd.read_pickle(os.path.join(loc_ds, experiment, dataset))
+        df_org = pd.read_pickle(os.path.join(src.DIR_DATA, dataset))
     else:
-        df_raw = pd.read_csv(os.path.join(loc_ds, experiment, dataset))
+        df_org = pd.read_csv(os.path.join(src.DIR_DATA, dataset))
     
     # SORTING GENE LIST
-    df_raw = pd.concat([(df_raw.iloc[:, :-1]).astype(float) ,df_raw.iloc[:, -1]], axis=1)
-    sort_genes = sorted(df_raw.columns[:-1])
-    sort_genes.extend(df_raw.columns[-1:])
-    df_raw = df_raw[sort_genes]
-    
+    df_org = pd.concat([(df_org.iloc[:, :-1]).astype(float) ,df_org.iloc[:, -1]], axis=1)
+    sort_genes = sorted(df_org.columns[:-1])
+    sort_genes.extend(df_org.columns[-1:])
+    df_org = df_org[sort_genes]
+        
+        
+    print('Dataset cell type         , ', df_org.groupby(target_column).size().index.values)
+    print('Dataset shape             , ', df_org.shape)
     # Importing all prior biological knowledge and combine all genes to create a common gene list
-    list_gene = None
-    if (bio_knowledge!=None):
-        df_bio = pd.DataFrame(pd.read_csv(os.path.join(src.DIR_DATA_PROCESSED, bio_knowledge), index_col=0)).sort_index()
-        df_bio_filtered = df_bio.iloc[df_bio.index.isin(df_raw.columns), :]
+    if (bio_knowledge != None):
+        df_bio_org = pd.DataFrame(pd.read_csv(os.path.join(src.DIR_DATA_PROCESSED, bio_knowledge), index_col=0)).sort_index()
+        df_bio = df_bio_org.iloc[df_bio_org.index.isin(df_org.columns), :]
+        del(df_bio_org)
+        df_first_hidden_layer = df_bio.copy()
+     
+    if dense_nodes != 0:
+        df_dense = pd.DataFrame(df_org.columns[:-1]).set_index(0)
+        for i in range(dense_nodes):
+            df_dense['dense'+str(i)] = 1.0
+        df_first_hidden_layer = df_dense.copy()
+    
+    if ( ( bio_knowledge != None ) and ( dense_nodes != 0 ) ):
+        df_first_hidden_layer = pd.merge(df_dense, df_bio, left_index=True, right_index=True, how='inner')
+        
+    print(df_first_hidden_layer.head())
+    df_features = df_org.iloc[:, :-1].copy()
+    df_features_filtered = df_features.iloc[:, df_features.columns.isin(df_first_hidden_layer.index) ]
+    
+    print('df_org shape              , ', df_org.shape)
+    print('df_features_filtered shape, ', df_features_filtered.shape)
 
-    del(df_bio)
-    print('Dataset cell type, ', df_raw.groupby('cell_type').size())
-    print('\nDataset shape             , ', df_raw.shape)
-    print('Biological knowledge shape, ', df_bio_filtered.shape)
-
-    print('\nDataset gene order top 10           ,', list(df_raw.columns[:10]))
-    print('Biological knowledge gene order top 10, ', list(df_bio_filtered.index[:10].values))
+    print('Biological knowledge shape, ', df_bio.shape)
+    print('First hidden layer shape  , ', df_first_hidden_layer.shape)
+    print('**** The gene order in biological source and dataset is ordered!! -> {} '.format( np.all(df_features_filtered.columns == df_bio.index.values) ))
     
     ohe = OneHotEncoder()
-    X = df_raw.iloc[:, :-1].values
-    y = df_raw.iloc[:, -1:].values
+#     X = df_org.iloc[:, :-1].values
+    X = df_features_filtered.values
+    y = df_org.iloc[:, -1:].values
     y_ohe = ohe.fit_transform(y).toarray()
 #     groups = y.reshape(1,-1)[0]
     
@@ -131,6 +149,8 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
         print('Full dataset!!')
         X_train.append(X)
         y_train.append(y_ohe)
+        split_index='with_full_dataset'
+        split=''
 
     START_TRAINING = dt.datetime.now().time().strftime('%H:%M:%S')
     df_nn = pd.DataFrame()
@@ -148,21 +168,21 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
         print('EXPERIMENT --- '+str(i+1)+'/'+str(len(X_train)))
 #         1-Layer with biological layer design
         time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
-        model_a1 = src.proposed_NN(X=X, y=y, bio_layer=df_bio_filtered, design_type='bio')
-        model_a1.fit(X_train[i], y_train[i]
+        model_trained = src.proposed_NN(X=X, y=y, bio_layer=df_first_hidden_layer, design_type='bio', select_optimizer=optimizer, second_layer=second_hidden_layer)
+        model_trained.fit(X_train[i], y_train[i]
                   , epochs=epochs_default
                   , batch_size=batch_default
                   , verbose=1
                   , callbacks=callbacks
                   , validation_split=val_split)
         
-        if split!='None':
-            y_pred_a1 = model_a1.predict(X_test[i])
+        if split_index!='with_full_dataset':
+            y_pred_a1 = model_trained.predict(X_test[i])
             df_proba = pd.DataFrame(y_pred_a1, columns=list(pd.DataFrame(ohe.categories_).iloc[0,:]))
             df_pred = pd.DataFrame(ohe.inverse_transform(y_pred_a1).reshape(1,-1)[0], columns=['prediction'])
             df_ground_truth = pd.DataFrame(ohe.inverse_transform(np.array(y_test[i])).reshape(1,-1)[0], columns=['ground_truth'])
             df_nn_a1 = pd.concat([df_proba, df_pred, df_ground_truth], axis=1)
-            df_nn_a1['design'] ='a1'
+            df_nn_a1['design'] =design_name
             df_nn_a1['index_split'] = i
             df_nn_a1['split'] = split
             df_nn = pd.concat([df_nn, df_nn_a1])
@@ -170,45 +190,19 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
         time_end  = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
         print('\nELAPSED TIME, ', (dt.datetime.strptime(time_end,'%H:%M:%S') - dt.datetime.strptime(time_start,'%H:%M:%S')))
         
-#         2-Layer with biological layer design
-        time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
-        model_a2 = src.proposed_NN(X=X, y=y, bio_layer=df_bio_filtered, design_type='bio', second_layer=True)
-        model_a2.fit(X_train[i], y_train[i]
-                  , epochs=epochs_default
-                  , batch_size=batch_default
-                  , verbose=1
-                  , callbacks=callbacks
-                  , validation_split=val_split)
-        
-        if split!='None':
-            y_pred_a2 = model_a2.predict(X_test[i])
-            df_proba = pd.DataFrame(y_pred_a2, columns=list(pd.DataFrame(ohe.categories_).iloc[0,:]))
-            df_pred = pd.DataFrame(ohe.inverse_transform(y_pred_a2).reshape(1,-1)[0], columns=['prediction'])
-            df_ground_truth = pd.DataFrame(ohe.inverse_transform(np.array(y_test[i])).reshape(1,-1)[0], columns=['ground_truth'])
-            df_nn_a2 = pd.concat([df_proba, df_pred, df_ground_truth], axis=1)
-            df_nn_a2['design'] ='a2'
-            df_nn_a2['index_split'] = i
-            df_nn_a2['split'] = split
-            df_nn = pd.concat([df_nn, df_nn_a2])
-            
-        time_end  = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
-        print('\nELAPSED TIME, ', (dt.datetime.strptime(time_end,'%H:%M:%S') - dt.datetime.strptime(time_start,'%H:%M:%S')))
-        
-        if save_model==True:
-            model_a1.save(os.path.join(loc_output, 'model_a1_'+dataset.split('.')[0]+'_'+split+split_index+'_trained.h5'))
-            model_a2.save(os.path.join(loc_output, 'model_a2_'+dataset.split('.')[0]+'_'+split+split_index+'_trained.h5'))
+        print('Model exported!! - '+str(i+1)+'/'+str(len(X_train)))
+        model_trained.save(os.path.join(loc_output, 'model_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+split+split_index+'_'+optimizer+'.h5'))
     
-        print('Model a1 and a2 deleted!! - '+str(i+1)+'/'+str(len(X_train)))
-        del(model_a1)
-        del(model_a2)
+        print('Model deleted!! - '+str(i+1)+'/'+str(len(X_train)))
+        del(model_trained)
         
     END_TRAINING  = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time()
     print('ended in ', END_TRAINING)
     print('EXPERIMENT COMPLETED! Total time is, ', (dt.datetime.strptime(END_TRAINING,'%H:%M:%S') - dt.datetime.strptime(START_TRAINING,'%H:%M:%S')))
     
-    if split!='None':
-        df_nn.to_pickle(os.path.join(loc_output,'model_result_'+dataset.split('.')[0]+'_'+split+'.pck'))
-        print('file is exported in ', os.path.join(loc_output,'model_result_'+dataset.split('.')[0]+'_'+split+'.pck'))
+    if split_index!='with_full_dataset':
+        df_nn.to_pickle(os.path.join(loc_output,'model_result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+split+'_'+optimizer+'.pck'))
+        print('file is exported in ', os.path.join(loc_output,'model_result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+split+'_'+optimizer+'.pck'))
         
     cuda.select_device(0)
     cuda.close()
@@ -216,13 +210,15 @@ def NN_training(experiment, location, dataset, bio_knowledge, split, nn_cv, save
 if __name__=='__main__':
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('-exp', '--experiment', help='specify the experiment, the experiment name should be located in ./data/external')
-    parser.add_argument('-loc', '--location', help='specify the dataset location in data folder, in ./data/{LOCATION}')
-    parser.add_argument('-ds' , '--dataset', help='specify the dataset, in ./data/external/{FILE NAME}')
-    parser.add_argument('-pbk', '--bio_knowledge', help='specifying the biological knowledge dataset. None for keeping all genes')
+    parser.add_argument('-design', '--design_name', help='name of design')
+    parser.add_argument('-second_hidden_layer', '--second_hidden_layer', help='second layer exist or not')
+    parser.add_argument('-ds', '--dataset', help='the experiment dataset')
+    parser.add_argument('-pbk', '--bio_knowledge', help='integrated prior biologicl knowledge')
+    parser.add_argument('-dense', '--dense_nodes', help='integrated dense node into first hidden layer')
     parser.add_argument('-split', '--split', help='specifying dataset split, etc, train_test_split or KFold')
-    parser.add_argument('-nncv', '--nn_cv', help='specifying the model NN-training or cross-validation')
-    parser.add_argument('-save', '--save_model', help='exporting the trained model')
+    parser.add_argument('-training_or_cv', '--nn_cv', help='specifying the model NN-training or cross-validation')
+    parser.add_argument('-optimizer', '--optimizer', help='selecting the optimizer')
+    parser.add_argument('-target_column', '--target_column', help='target column')
     
     
     if len(sys.argv)==1:
@@ -230,10 +226,13 @@ if __name__=='__main__':
         sys.exit(1)
         
     args = parser.parse_args()
-    NN_training(args.experiment
-                , args.location
+    NN_training(args.design_name
+                , eval(args.second_hidden_layer)
                 , args.dataset
                 , args.bio_knowledge
+                , int(args.dense_nodes)
                 , args.split
                 , args.nn_cv
-                , eval(args.save_model))
+                , args.optimizer
+                , args.target_column
+               )
