@@ -72,12 +72,107 @@ echo "PREPROCESSING of EXPERIMENT IMMUNE DATASET"
 
 echo "NEURAL NETWORK TRAINING"
 echo "NEURAL NETWORK TRAINING for HUMAN EXPERIMENT"
-# python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split StratifiedKFold -nncv NN -save True
-# python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -save True
+
+python notebooks/4.0-pg-model-training.py \
+    -design 1_layer_signaling \
+    -second_hidden_layer False \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -pbk pbk_layer_hsa.txt \
+    -dense 0 \
+    -split StratifiedKFold \
+    -training_or_cv NN \
+    -optimizer Adam \
+    -target_column cell_type &&
+python notebooks/4.0-pg-model-training.py \
+    -design 2_layer_signaling \
+    -second_hidden_layer True \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -pbk pbk_layer_hsa.txt \
+    -dense 0 \
+    -split StratifiedKFold \
+    -training_or_cv NN \
+    -optimizer Adam \
+    -target_column cell_type
+    
+python notebooks/4.0-pg-model-training.py \
+    -design 1_layer_signaling \
+    -second_hidden_layer False \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -pbk pbk_layer_hsa.txt \
+    -dense 0 \
+    -split train_test_split \
+    -training_or_cv NN \
+    -optimizer Adam \
+    -target_column cell_type &&
+python notebooks/4.0-pg-model-training.py \
+    -design 2_layer_signaling \
+    -second_hidden_layer True \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -pbk pbk_layer_hsa.txt \
+    -dense 0 \
+    -split train_test_split \
+    -training_or_cv NN \
+    -optimizer Adam \
+    -target_column cell_type
+    
+python notebooks/4.0-pg-model-training.py \
+    -design 1_layer_signaling \
+    -second_hidden_layer False \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -pbk pbk_layer_hsa.txt \
+    -dense 0 \
+    -split None \
+    -training_or_cv NN \
+    -optimizer Adam \
+    -target_column cell_type &&
+python notebooks/4.0-pg-model-training.py \
+    -design 2_layer_signaling \
+    -second_hidden_layer True \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -pbk pbk_layer_hsa.txt \
+    -dense 0 \
+    -split None \
+    -training_or_cv NN \
+    -optimizer Adam \
+    -target_column cell_type
 
 echo "NEURAL NETWORK TRAINING for MOUSE EXPERIMENT"
 # python notebooks/4.0-pg-model-training.py -exp exper_mouse -loc processed -ds mouse_training_sw_StandardScaler.pck -pbk pbk_layer_mmu.txt -split KFold -nncv NN
 # python notebooks/4.0-pg-model-training.py -exp exper_mouse -loc processed -ds mouse_training_sw_StandardScaler.pck -pbk pbk_layer_mmu.txt -split train_test_split -nncv NN -save True
+
+python notebooks/4.0-pg-model-training.py \
+    -design ppi_with_100dense \
+    -second_hidden_layer False \
+    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -pbk pbk_layer_ppi.txt \
+    -dense 100 \
+    -split None \
+    -training_or_cv NN \
+    -optimizer SGD \
+    -target_column Label
+    
+python notebooks/4.0-pg-model-training.py \
+    -design ppitf_with_100dense \
+    -second_hidden_layer False \
+    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -pbk pbk_layer_ppitf.txt \
+    -dense 100 \
+    -split None \
+    -training_or_cv NN \
+    -optimizer SGD \
+    -target_column Label
+
+python notebooks/4.0-pg-model-training.py \
+    -design ppi_with_100dense \
+    -second_hidden_layer False \
+    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -pbk pbk_layer_ppi.txt \
+    -dense 100 \
+    -split StratifiedKFold \
+    -training_or_cv NN \
+    -optimizer SGD \
+    -target_column Label
+
 
 echo "NEURAL NETWORK TRAINING for PBMC EXPERIMENT"
 ### python notebooks/4.0-pg-model-training.py -exp exper_pbmc -loc processed -ds Immune_magic_sw_log1p.pck -pbk pbk_layer_hsa.txt -split KFold -nncv NN
@@ -100,8 +195,12 @@ echo "MOUSE"
 echo "IMMUNE"
 # python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds exper_immune_raw_sw_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
 
-python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds Fig3g_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
+python notebooks/4.0-pg-model-training.py -dataset processed/exper_immune/Fig3g_log1p.pck -pbk pbk_layer_hsa.txt -dense 0 -split train_test_split -training_cv training -network proposed -save_model True
 
+
+    
+    
+    
 python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds Fig3g_log1p.pck -pbk pbk_layer_hsa.txt -split StratifiedKFold -nncv NN -model True
 
 
