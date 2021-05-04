@@ -98,22 +98,19 @@ def NN_training(design_name, second_hidden_layer, dataset, bio_knowledge, dense_
         df_first_hidden_layer = df_dense.copy()
     
     if ( ( bio_knowledge != None ) and ( dense_nodes != 0 ) ):
-        df_first_hidden_layer = pd.merge(df_dense, df_bio, left_index=True, right_index=True, how='inner')
+        df_first_hidden_layer = pd.merge(df_dense, df_bio, left_index=True, right_index=True, how='left').fillna(0)
         
     print(df_first_hidden_layer.head())
-    df_features = df_org.iloc[:, :-1].copy()
-    df_features_filtered = df_features.iloc[:, df_features.columns.isin(df_first_hidden_layer.index) ]
-    
+
     print('df_org shape              , ', df_org.shape)
-    print('df_features_filtered shape, ', df_features_filtered.shape)
+#     print('df_features_filtered shape, ', df_features_filtered.shape)
 
     print('Biological knowledge shape, ', df_bio.shape)
     print('First hidden layer shape  , ', df_first_hidden_layer.shape)
-    print('**** The gene order in biological source and dataset is ordered!! -> {} '.format( np.all(df_features_filtered.columns == df_bio.index.values) ))
+    print('**** The gene order in biological source and dataset is ordered!! -> {} '.format( np.all(df_org.columns[:-1] == df_first_hidden_layer.index.values) ))
     
     ohe = OneHotEncoder()
-#     X = df_org.iloc[:, :-1].values
-    X = df_features_filtered.values
+    X = df_org.iloc[:, :-1].values
     y = df_org.iloc[:, -1:].values
     y_ohe = ohe.fit_transform(y).toarray()
 #     groups = y.reshape(1,-1)[0]
