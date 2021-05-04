@@ -143,7 +143,7 @@ echo "NEURAL NETWORK TRAINING for MOUSE EXPERIMENT"
 python notebooks/4.0-pg-model-training.py \
     -design ppi_with_100dense \
     -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_mms.pck \
     -pbk pbk_layer_ppi.txt \
     -dense 100 \
     -split None \
