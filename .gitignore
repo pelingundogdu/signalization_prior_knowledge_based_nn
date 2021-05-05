@@ -6,6 +6,7 @@ nohup/
 project_tree.ipynb
 notebooks/red_green.ipynb
 notebooks/Untit*.ipynb
+mouse_manuel_experiment/
 
 #################################### DEFAULT ####################################
 # Byte-compiled / optimized / DLL files
