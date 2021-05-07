@@ -149,24 +149,47 @@ python notebooks/4.0-pg-model-training.py \
     -split None \
     -training_or_cv NN \
     -optimizer SGD \
+    -target_column Label &&
+python notebooks/4.0-pg-model-training.py \
+    -design ppi_with_100dense \
+    -second_hidden_layer False \
+    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -pbk pbk_layer_ppi.txt \
+    -dense 100 \
+    -split None \
+    -training_or_cv NN \
+    -optimizer SGD \
     -target_column Label
     
 python notebooks/4.0-pg-model-training.py \
-    -design ppitf_with_100dense \
+    -design signaling \
     -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
-    -pbk pbk_layer_ppitf.txt \
-    -dense 100 \
+    -ds processed/exper_mouse/mouse_learning.pck \
+    -pbk pbk_layer_mmu.txt \
+    -dense 0 \
     -split None \
     -training_or_cv NN \
     -optimizer SGD \
     -target_column Label
 
 python notebooks/4.0-pg-model-training.py \
-    -design ppi_with_100dense \
+    -design signaling_mms \
     -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
-    -pbk pbk_layer_ppi.txt \
+    -ds processed/exper_mouse/mouse_learning_mms.pck \
+    -pbk pbk_layer_mmu.txt \
+    -dense 0 \
+    -split StratifiedKFold \
+    -training_or_cv NN \
+    -optimizer SGD \
+    -target_column Label
+    
+    
+    
+python notebooks/4.0-pg-model-training.py \
+    -design dense100_mms \
+    -second_hidden_layer False \
+    -ds processed/exper_mouse/mouse_learning_mms.pck \
+    -pbk None \
     -dense 100 \
     -split StratifiedKFold \
     -training_or_cv NN \
@@ -210,5 +233,14 @@ echo "LocalOutlierFactor Analysis"
 
 
 
+
+
+RETRIEVAL 
+python notebooks/8.0-paper-retrieval.py models/NN/exper_mouse/model_ppi_with_100dense_mouse_learning_ss_with_full_dataset_SGD.h5 0 saved_model 0 all default
+
+
+python notebooks/8.0-paper-retrieval.py models/NN/exper_mouse/model_ppi_with_100dense_mouse_learning_ss_with_full_dataset_SGD.h5 0 saved_model 0 all default
+
+python notebooks/8.1-paper-getting-retrieval-summary.py signalization_prior_knowledge_based_nn/AA/
 
 date

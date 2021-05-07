@@ -75,6 +75,7 @@ def NN_training(design_name, second_hidden_layer, dataset, bio_knowledge, dense_
     else:
         df_org = pd.read_csv(os.path.join(src.DIR_DATA, dataset))
     
+    print('df_org, \n', df_org)
     # SORTING GENE LIST
     df_org = pd.concat([(df_org.iloc[:, :-1]).astype(float) ,df_org.iloc[:, -1]], axis=1)
     sort_genes = sorted(df_org.columns[:-1])
@@ -82,30 +83,38 @@ def NN_training(design_name, second_hidden_layer, dataset, bio_knowledge, dense_
     df_org = df_org[sort_genes]
         
         
+    print('df_org, \n', df_org)
     print('Dataset cell type         , ', df_org.groupby(target_column).size().index.values)
     print('Dataset shape             , ', df_org.shape)
     # Importing all prior biological knowledge and combine all genes to create a common gene list
-    if (bio_knowledge != None):
+    if (bio_knowledge != 'None'):
         df_bio_org = pd.DataFrame(pd.read_csv(os.path.join(src.DIR_DATA_PROCESSED, bio_knowledge), index_col=0)).sort_index()
         df_bio = df_bio_org.iloc[df_bio_org.index.isin(df_org.columns), :]
         del(df_bio_org)
-        df_first_hidden_layer = df_bio.copy()
-     
+        print(df_bio)
+        print('Biological knowledge shape, ', df_bio.shape)        
+        df_first_hidden_layer = pd.merge(left=pd.DataFrame(sorted(df_org.columns[:-1])).set_index(0)
+                                         , right=df_bio
+                                         , left_index=True
+                                         , right_index=True
+                                         , how='left').fillna(0.0)
+
+    
     if dense_nodes != 0:
-        df_dense = pd.DataFrame(df_org.columns[:-1]).set_index(0)
+        df_dense = pd.DataFrame(df_org.columns[:-1]).set_index('Sample')
         for i in range(dense_nodes):
             df_dense['dense'+str(i)] = 1.0
         df_first_hidden_layer = df_dense.copy()
-    
-    if ( ( bio_knowledge != None ) and ( dense_nodes != 0 ) ):
+    print(df_first_hidden_layer)
+    if ( ( bio_knowledge != 'None' ) and ( dense_nodes != 0 ) ):
         df_first_hidden_layer = pd.merge(df_dense, df_bio, left_index=True, right_index=True, how='left').fillna(0)
         
-    print(df_first_hidden_layer.head())
+    print(df_first_hidden_layer)
 
     print('df_org shape              , ', df_org.shape)
 #     print('df_features_filtered shape, ', df_features_filtered.shape)
 
-    print('Biological knowledge shape, ', df_bio.shape)
+    
     print('First hidden layer shape  , ', df_first_hidden_layer.shape)
     print('**** The gene order in biological source and dataset is ordered!! -> {} '.format( np.all(df_org.columns[:-1] == df_first_hidden_layer.index.values) ))
     
