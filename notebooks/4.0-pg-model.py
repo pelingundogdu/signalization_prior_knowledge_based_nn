@@ -144,6 +144,7 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
         for i, indexes in enumerate(logo.split(X, y, groups)):
             print(split+' --- '+str(i+1)+'/'+str(logo.get_n_splits(X, y, groups)))
             train_index=indexes[0]
+            print(train_index[0])
             test_index=indexes[1]
                 
             X_train, X_test = X[train_index], X[test_index]
@@ -187,6 +188,7 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
             for i, indexes in enumerate(lpgo_split_random_selection):
                 print(split+' --- '+str(i+1)+'/'+str(p_out_iteration))
                 train_index=indexes[0]
+                print(train_index[:50])
                 test_index=indexes[1]
             
                 X_train, X_test = X[train_index], X[test_index]
@@ -309,7 +311,7 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                 model.save(os.path.join(loc_output, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
   
 
-    if split!='LeavePGroupsOut' and split!='LeaveOneGroupsOut':
+    if split!='LeavePGroupsOut' and split!='LeaveOneGroupOut':
         df_nn.to_pickle(os.path.join(loc_output,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
         print('file is exported in ', os.path.join(loc_output,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
     
