@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, FunctionTransformer
 
-def dataframe_modification(experiment_dataset, target_col_index)
+def dataframe_modification(experiment_dataset, target_col_index):
     '''
     Data uploading and preprocessing
 
@@ -30,9 +30,11 @@ def dataframe_modification(experiment_dataset, target_col_index)
         Uploaded and preprocessed dataset
     '''
     print('\n****** RAW DATASET ******')
-    print('experiment dataset shape     , {0}\n'.format(df_experiment.shape))
-    print(df_experiment.head(3))
-    print(df_experiment.info())
+    print('experiment dataset shape     , {0}\n'.format(experiment_dataset.shape))
+    print(experiment_dataset.head(3))
+    print('******* DATASET INFO *******')
+    print(experiment_dataset.info())
+    print('******* DATASET INFO *******')
 
 #     (1) applying lowercase opation for gene names
     experiment_dataset.columns = experiment_dataset.columns.str.lower()
@@ -41,20 +43,24 @@ def dataframe_modification(experiment_dataset, target_col_index)
 #     (3) reordering the dataset (cell type information is the last column)
     col_name = list(experiment_dataset.columns)
     target_col_name = col_name.pop(target_col_index)
-    col_name.append(target_col)
+    col_name.append(target_col_name)
     experiment_dataset = experiment_dataset[col_name]
+    print(experiment_dataset.head())
 #     (4) changing the data type as float of gene expression
-    experiment_dataset.iloc[:, :-1] = experiment_dataset.iloc[:, :-1].astype('float32')
-
+    experiment_dataset = pd.concat([experiment_dataset.iloc[:, :-1].astype('float32'), experiment_dataset.iloc[:,-1]], axis=1)
+    print(experiment_dataset.head())
     print('\n****** PROCESSED DATASET ******')
-    print('experiment dataset shape     , {0}\n'.format(df_experiment.shape))
-    print(df_experiment.head(3))
-    print(df_experiment.info())
+    print('Target column, ', experiment_dataset.columns[target_col_index])
+    print('experiment dataset shape     , {0}\n'.format(experiment_dataset.shape))
+    print(experiment_dataset.head(3))
+#     print('******* DATASET INFO *******')
+#     print(experiment_dataset.info())
+#     print('******* DATASET INFO *******')
     
-    return(df_experiment)
+    return(experiment_dataset)
 
 
-def sample_wise_normalization(dataset, target_col_index):
+def sample_wise_normalization(dataset):
     '''
     Applying sample-wise normalization into dataset
 
@@ -68,11 +74,11 @@ def sample_wise_normalization(dataset, target_col_index):
         Scaled dataset
     '''
     print('    -> sample wise normalization implemented!')
-    df_sample_wise = pd.concat([dataset.iloc[:, :target_col_index].div(dataset.iloc[:, :target_col_index].sum(axis=1), axis=0)*1e6
-                                , dataset.iloc[:, target_col_index]], axis=1)
+    df_sample_wise = pd.concat([ dataset.iloc[:, :-1].div(dataset.iloc[:, :-1].sum(axis=1), axis=0)*1e6
+                                , dataset.iloc[:, -1]], axis=1)
     return(df_sample_wise)
 
-def scaler_normalization(dataset, target_col_index, scaler_name):
+def scaler_normalization(dataset, scaler_name):
     '''
     Applying scaler or required mathematical function into dataset
 
@@ -99,11 +105,11 @@ def scaler_normalization(dataset, target_col_index, scaler_name):
         else:
             raise Exception('Please, choose one of the normzalization options --> standard, minmax or log1p !!!')
 
-        print('    -> Normalization implemented! -- {0}'.format(scaler_name))
-
-        df_scaler = pd.concat([pd.DataFrame(scaler.fit_transform(dataset.iloc[: , :target_col_index]) , columns=dataset.columns[:target_col_index]) 
-                               ,dataset.iloc[:, target_col_index]], axis=1)
-
+        df_scaler = pd.concat([pd.DataFrame(scaler.fit_transform(dataset.iloc[: , :-1]) , columns=dataset.columns[:-1]).set_index(dataset.index)
+                               ,dataset.iloc[:, -1]], axis=1)
+        
+        print('    -> Normalization implemented! -- {0}'.format(scaler_name))        
+        print(df_scaler.head(3))
         return(df_scaler)
     
     except Exception as error:
