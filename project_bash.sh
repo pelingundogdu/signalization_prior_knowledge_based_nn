@@ -17,43 +17,89 @@
 
 date
 
-# python config/settings.py
+echo "Exporting signaling pathway information from hipathia --- scripts/pathway_layer_data/1.1-pg-pathway-from-hipathia.r executing..."
+# Rscript scripts/pathway_layer_data/1.1-pg-pathway-from-hipathia.r -sp hsa -src hipathia
+# Rscript scripts/pathway_layer_data/1.1-pg-pathway-from-hipathia.r -sp mmu -src hipathia
 
-# Exporting signaling pathway information from hipathia
-# Rscript src/data/1.1-pg-pathway-from-hipathia.r -sp hsa -src hipathia
-# Rscript src/data/1.1-pg-pathway-from-hipathia.r -sp mmu -src hipathia
-echo "Script 1.1-pg-pathway-from-hipathia.r executed!!"
+echo "Processing the pathway list, removing disease related pathways --- scripts/pathway_layer_data/1.2-pg-remove-disease-cancer.py executing..."
+# python scripts/pathway_layer_data/1.2-pg-remove-disease-cancer.py -sp hsa -src hipathia
+# python scripts/pathway_layer_data/1.2-pg-remove-disease-cancer.py -sp mmu -src hipathia
 
-# Processing the pathway list, removing disease related pathways
-# python src/data/1.2-pg-remove-disease-cancer.py -sp hsa -src hipathia
-# python src/data/1.2-pg-remove-disease-cancer.py -sp mmu -src hipathia
-echo "Script 1.2-pg-remove-disease-cancer.py executed!!"
+echo "Exporting gene list based on processed pathway list in 1.2-pg-remove-disease-cancer.py --> scripts/pathway_layer_data/1.3-pg-gene-from-hipathia.r executing..."
+# Rscript scripts/pathway_layer_data/1.3-pg-gene-from-hipathia.r -sp hsa -src hipathia
+# Rscript scripts/pathway_layer_data/1.3-pg-gene-from-hipathia.r -sp mmu -src hipathia
 
-# Exporting gene list based on processed pathway list in 1.2-pg-remove-disease-cancer.py
-# Rscript src/data/1.3-pg-gene-from-hipathia.r -sp hsa -src hipathia
-# Rscript src/data/1.3-pg-gene-from-hipathia.r -sp mmu -src hipathia
-echo "Script 1.3-pg-gene-from-hipathia.r executed!!"
+echo "Converting entrex id value into gene symbol -->  scripts/pathway_layer_data/1.4-pg-gene-id-entrez-converter.r executed!!"
+# Rscript scripts/pathway_layer_data/1.4-pg-gene-id-entrez-converter.r -sp hsa -src hipathia -ga org.Hs.eg.db
+# Rscript scripts/pathway_layer_data/1.4-pg-gene-id-entrez-converter.r -sp mmu -src hipathia -ga org.Mm.eg.db
 
-# Converting entrex id value into gene symbol
-# Rscript src/data/1.4-pg-gene-id-entrez-converter.r -sp hsa -src hipathia -ga org.Hs.eg.db
-# Rscript src/data/1.4-pg-gene-id-entrez-converter.r -sp mmu -src hipathia -ga org.Mm.eg.db
-echo "Script 1.4-pg-gene-id-entrez-converter.r executed!!"
+echo "Creating prior biological knowledge information to include the nn design in first hidden layer --> scripts/pathway_layer_data/1.5-pg-creating-biological-layer.py executing..."
+# python scripts/pathway_layer_data/1.5-pg-creating-biological-layer.py -sp hsa -src hipathia
+# python scripts/pathway_layer_data/1.5-pg-creating-biological-layer.py -sp mmu -src hipathia
 
-# Creating prior biological knowledge information to include the nn design in first hidden layer 
-# python src/data/1.5-pg-creating-biological-layer.py -sp hsa -src hipathia
-# python src/data/1.5-pg-creating-biological-layer.py -sp mmu -src hipathia
-echo "Script 1.5-pg-creating-biological-layer.py executed!!"
+echo "PATHWAY INFORMATION EXPORTED!!!"
 
-echo "COMPLETE EXTERNAL DATA SOURCE OPERTATION!!!"
+echo "Exporting data/processed/pbk_layer_{BIO_SOURCE} files"
+# python scripts/bio_layer_data/1.0-pg-exporting-bio-layer.py
+
 
 echo "PREPROCESSING EXPERIMENTS' DATASETS"
-echo "PREPROCESSING of EXPERIMENT HUMAN DATASET"
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_melanoma -loc external -ds reference.rds -pbk pbk_layer-hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_melanoma -loc external -ds query.rds -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
+
+# $ python notebooks/2.0-pg-preprocessing-dataset.py -exp {EXPERIMENT NAME}
+#                                                    -ds  {DATASET NAME} 
+#                                                    -sc  {SCALER, StandardScaler(ss), MinMaxScaker(mms), Log1p} 
+#                                                    -tci {TARGET COLUMN INDEX}
+#                                                    -ofn {OUTPUT FILE NAME}
+
+echo "PREPROCESSING of EXPERIMENT MELANOMA DATASET"
+
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_melanoma \
+    -ds reference.pck \
+    -sw False \
+    -sc log1p \
+    -tci -1 \
+    -ofn reference &&
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_melanoma \
+    -ds query.pck \
+    -sw False \
+    -sc log1p \
+    -tci -1 \
+    -ofn query
+    
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_melanoma \
+    -ds query_reference_wo_negcell.pck \
+    -sw False \
+    -sc log1p \
+    -tci -1 \
+    -ofn query_reference_wo_negcell
 
 echo "PREPROCESSING of EXPERIMENT MOUSE DATASET"
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_mouse -loc processed -ds mouse_training_sw.pck -pbk pbk_layer_mmu.txt -sc StandardScaler\(\) -tci -1
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_mouse -loc processed -ds mouse_retrieval_sw.pck -pbk pbk_layer_mmu.txt -sc StandardScaler\(\) -tci -1
+
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_mouse \
+    -ds 1-3_integrated_NNtraining.pck \
+    -sw False \
+    -sc ss \
+    -tci 0 \
+    -ofn mouse_learning &&
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_mouse \
+    -ds 3-33_integrated_retrieval_set.pck \
+    -sw False \
+    -sc ss \
+    -tci 0 \
+    -ofn mouse_retrieval
+    
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_mouse \
+    -ds 3-33_integrated_retrieval_set_cv.pck \
+    -sw False \
+    -sc ss \
+    -tci -1 \
+    -ofn mouse_retrieval_cv
 
 echo "PREPROCESSING of EXPERIMENT PBMC DATASET"
 ######## MAGIC ########
@@ -61,146 +107,172 @@ echo "PREPROCESSING of EXPERIMENT PBMC DATASET"
 # python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_pbmc -loc processed -ds Immune_magic_sw.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
 
 ######### RAW #########
-## raw with sample-wise and log normalization
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_pbmc -loc processed -ds Immune_sw.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
+
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_pbmc \
+    -ds Immune.pck \
+    -sw True \
+    -sc log1p \
+    -tci -1 \
+    -ofn pbmc_fig2
 
 echo "PREPROCESSING of EXPERIMENT IMMUNE DATASET"
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_immune -loc processed -ds exper_immune_raw_sw.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
 
+python notebooks/2.0-pg-preprocessing-dataset.py \
+    -exp exper_immune \
+    -ds Fig3g.pck \
+    -sw False \
+    -sc None \
+    -tci -1 \
+    -ofn immune_fig3
 
-# python notebooks/3.1-pg-preprocessing-experiment-dataset.py -exp exper_immune -loc external -ds Fig3g.pck -pbk pbk_layer_hsa.txt -sc FunctionTransformer\(np.log1p\) -tci -1
 
 echo "NEURAL NETWORK TRAINING"
-echo "NEURAL NETWORK TRAINING for HUMAN EXPERIMENT"
 
-python notebooks/4.0-pg-model-training.py \
-    -design 1_layer_signaling \
+############################################## MELANOMA EXPERIMENT ##############################################
+echo "MODEL TRAINING for MELANOMA EXPERIMENT"
+
+# 1-LAYER DENSE100
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_dense100 \
+    -first_hidden_layer_pbk None \
+    -first_hidden_layer_dense 100 \
     -second_hidden_layer False \
-    -ds processed/exper_melanoma/reference_log1p.pck \
-    -pbk pbk_layer_hsa.txt \
-    -dense 0 \
-    -split StratifiedKFold \
-    -training_or_cv NN \
     -optimizer Adam \
-    -target_column cell_type &&
-python notebooks/4.0-pg-model-training.py \
-    -design 2_layer_signaling \
-    -second_hidden_layer True \
+    -activation relu \
     -ds processed/exper_melanoma/reference_log1p.pck \
-    -pbk pbk_layer_hsa.txt \
-    -dense 0 \
     -split StratifiedKFold \
-    -training_or_cv NN \
-    -optimizer Adam \
-    -target_column cell_type
-    
-python notebooks/4.0-pg-model-training.py \
-    -design 1_layer_signaling \
+    -filter_gene_space False &&
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_dense100 \
+    -first_hidden_layer_pbk None \
+    -first_hidden_layer_dense 100 \
     -second_hidden_layer False \
+    -optimizer Adam \
+    -activation relu \
     -ds processed/exper_melanoma/reference_log1p.pck \
-    -pbk pbk_layer_hsa.txt \
-    -dense 0 \
     -split train_test_split \
-    -training_or_cv NN \
+    -filter_gene_space False &&
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_dense100 \
+    -first_hidden_layer_pbk None \
+    -first_hidden_layer_dense 100 \
+    -second_hidden_layer False \
     -optimizer Adam \
-    -target_column cell_type &&
-python notebooks/4.0-pg-model-training.py \
-    -design 2_layer_signaling \
-    -second_hidden_layer True \
+    -activation relu \
     -ds processed/exper_melanoma/reference_log1p.pck \
-    -pbk pbk_layer_hsa.txt \
-    -dense 0 \
-    -split train_test_split \
-    -training_or_cv NN \
-    -optimizer Adam \
-    -target_column cell_type
-    
-python notebooks/4.0-pg-model-training.py \
+    -split LeaveOneGroupOut \
+    -filter_gene_space False
+
+# 1-LAYER SIGNALING
+python notebooks/4.0-pg-model.py \
     -design 1_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
     -second_hidden_layer False \
-    -ds processed/exper_melanoma/reference_log1p.pck \
-    -pbk pbk_layer_hsa.txt \
-    -dense 0 \
-    -split None \
-    -training_or_cv NN \
     -optimizer Adam \
-    -target_column cell_type &&
-python notebooks/4.0-pg-model-training.py \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -split StratifiedKFold \
+    -filter_gene_space False &&
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
+    -second_hidden_layer False \
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -split train_test_split \
+    -filter_gene_space False &&
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
+    -second_hidden_layer False \
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -split LeaveOneGroupOut \
+    -filter_gene_space False
+    
+# 2-LAYER SIGNALING
+python notebooks/4.0-pg-model.py \
     -design 2_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
     -second_hidden_layer True \
-    -ds processed/exper_melanoma/reference_log1p.pck \
-    -pbk pbk_layer_hsa.txt \
-    -dense 0 \
-    -split None \
-    -training_or_cv NN \
     -optimizer Adam \
-    -target_column cell_type
-
-echo "NEURAL NETWORK TRAINING for MOUSE EXPERIMENT"
-# python notebooks/4.0-pg-model-training.py -exp exper_mouse -loc processed -ds mouse_training_sw_StandardScaler.pck -pbk pbk_layer_mmu.txt -split KFold -nncv NN
-# python notebooks/4.0-pg-model-training.py -exp exper_mouse -loc processed -ds mouse_training_sw_StandardScaler.pck -pbk pbk_layer_mmu.txt -split train_test_split -nncv NN -save True
-
-python notebooks/4.0-pg-model-training.py \
-    -design ppi_with_100dense \
-    -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning_mms.pck \
-    -pbk pbk_layer_ppi.txt \
-    -dense 100 \
-    -split None \
-    -training_or_cv NN \
-    -optimizer SGD \
-    -target_column Label &&
-python notebooks/4.0-pg-model-training.py \
-    -design ppi_with_100dense \
-    -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
-    -pbk pbk_layer_ppi.txt \
-    -dense 100 \
-    -split None \
-    -training_or_cv NN \
-    -optimizer SGD \
-    -target_column Label
-    
-python notebooks/4.0-pg-model-training.py \
-    -design signaling \
-    -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning.pck \
-    -pbk pbk_layer_mmu.txt \
-    -dense 0 \
-    -split None \
-    -training_or_cv NN \
-    -optimizer SGD \
-    -target_column Label
-
-python notebooks/4.0-pg-model-training.py \
-    -design signaling_mms \
-    -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning_mms.pck \
-    -pbk pbk_layer_mmu.txt \
-    -dense 0 \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
     -split StratifiedKFold \
-    -training_or_cv NN \
-    -optimizer SGD \
-    -target_column Label
+    -filter_gene_space False &&
+python notebooks/4.0-pg-model.py \
+    -design 2_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
+    -second_hidden_layer True \
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -split train_test_split \
+    -filter_gene_space False &&
+python notebooks/4.0-pg-model.py \
+    -design 2_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
+    -second_hidden_layer True \
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -split LeaveOneGroupOut \
+    -filter_gene_space False 
     
-    
-    
-python notebooks/4.0-pg-model-training.py \
-    -design dense100_mms \
+## CROSS-VALIDATION
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
     -second_hidden_layer False \
-    -ds processed/exper_mouse/mouse_learning_mms.pck \
-    -pbk None \
-    -dense 100 \
-    -split StratifiedKFold \
-    -training_or_cv NN \
-    -optimizer SGD \
-    -target_column Label
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -split RepeatedStratifiedKFold \
+    -filter_gene_space False    
+python notebooks/4.0-pg-model.py \
+    -design 2_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
+    -second_hidden_layer True \
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -split RepeatedStratifiedKFold \
+    -filter_gene_space False
+    
+    
+############################################## MELANOMA EXPERIMENT ##############################################
 
+
+
+
+############################################### MOUSE EXPERIMENT ###############################################
 
 echo "NEURAL NETWORK TRAINING for PBMC EXPERIMENT"
 ### python notebooks/4.0-pg-model-training.py -exp exper_pbmc -loc processed -ds Immune_magic_sw_log1p.pck -pbk pbk_layer_hsa.txt -split KFold -nncv NN
 # python notebooks/4.0-pg-model-training.py -exp exper_pbmc -loc processed -ds Immune_sw_log1p.pck -pbk pbk_layer_hsa.txt -split KFold -nncv NN
 
+echo "NEURAL NETWORK TRAINING for IMMUNE EXPERIMENT"
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_signaling \
+    -first_hidden_layer_pbk pbk_layer_hsa_sig.txt \
+    -first_hidden_layer_dense 0 \
+    -second_hidden_layer False \
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_immune/immune_fig3.pck \
+    -split train_test_split \
+    -filter_gene_space False
 
 
 echo "CROSS VALIDATION"
@@ -210,37 +282,14 @@ echo "CROSS VALIDATION for HUMAN EXPERIMENT"
 echo "CROSS VALIDATION for PBMC EXPERIMENT"
 # python notebooks/5.0-pg-cross-validation.py -exp exper_pbmc -loc processed -ds Immune_sw_log1p.pck -pbk pbk_layer_hsa.txt -nncv CV
 
-echo "ENCODING INFORMATION"
-echo "MELANOMA"
-# python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split KFold -nncv NN -model False
-echo "MOUSE"
-# python notebooks/4.0-pg-model-training.py -exp exper_mouse -loc processed -ds mouse_training_sw_StandardScaler.pck -pbk pbk_layer_mmu.txt -split train_test_split -nncv NN -model True
-echo "IMMUNE"
-# python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds exper_immune_raw_sw_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
 
-python notebooks/4.0-pg-model-training.py -dataset processed/exper_immune/Fig3g_log1p.pck -pbk pbk_layer_hsa.txt -dense 0 -split train_test_split -training_cv training -network proposed -save_model True
+echo "RETRIEVAL ANALYSIS for MOUSE EXPERIMENT"
 
 
-    
-    
-    
-python notebooks/4.0-pg-model-training.py -exp exper_immune -loc processed -ds Fig3g_log1p.pck -pbk pbk_layer_hsa.txt -split StratifiedKFold -nncv NN -model True
-
-
-echo "LocalOutlierFactor Analysis"
-# python notebooks/4.0-pg-model-training.py -exp exper_melanoma -loc processed -ds reference_log1p.pck -pbk pbk_layer_hsa.txt -split train_test_split -nncv NN -model True
+python notebooks/8.0-paper-retrieval.py models/exper_mouse/None 0 saved_model 0 all
 
 
 
-
-
-
-RETRIEVAL 
-python notebooks/8.0-paper-retrieval.py models/NN/exper_mouse/model_ppi_with_100dense_mouse_learning_ss_with_full_dataset_SGD.h5 0 saved_model 0 all default
-
-
-python notebooks/8.0-paper-retrieval.py models/NN/exper_mouse/model_ppi_with_100dense_mouse_learning_ss_with_full_dataset_SGD.h5 0 saved_model 0 all default
-
-python notebooks/8.1-paper-getting-retrieval-summary.py signalization_prior_knowledge_based_nn/AA/
+python notebooks/8.1-paper-getting-retrieval-summary.py reports/retrieval/exper_mouse/
 
 date
