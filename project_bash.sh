@@ -288,8 +288,6 @@ echo "RETRIEVAL ANALYSIS for MOUSE EXPERIMENT"
 
 python notebooks/8.0-paper-retrieval.py models/exper_mouse/None 0 saved_model 0 all
 
-
-
 python notebooks/8.1-paper-getting-retrieval-summary.py reports/retrieval/exper_mouse/
 
 date
