@@ -46,6 +46,7 @@ import pandas as pd
 import datetime as dt
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold, train_test_split, LeaveOneGroupOut, LeavePGroupsOut
+from sklearn.cluster import KMeans
 
 from numba import cuda
 from tensorflow import keras
@@ -117,6 +118,7 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
     ohe = OneHotEncoder()
     X = df.iloc[:, :-1].values
     y = df.iloc[:, -1:].values
+    y_category = df.iloc[:, -1].astype('category').cat.codes
     y_ohe = ohe.fit_transform(y).toarray()
     groups = df.iloc[:, -1].values
     
@@ -192,7 +194,8 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                 test_index=indexes[1]
             
                 X_train, X_test = X[train_index], X[test_index]
-                y_train, y_test = y_ohe[train_index], y_ohe[test_index]
+                y_train = y_ohe[train_index]
+                y_test = y_category[test_index]
 
                 keras.backend.clear_session()
                 model = src.proposed_NN(X=X, y=y
@@ -209,11 +212,23 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                           , callbacks=callbacks
                           , validation_split=val_split)
 
-                y_pred = model.predict(X_test)
-                df_split = src.generate_pred_result(y_pred, y_test, ohe)
+                #obtaining encoding part from model
+                model_encoding = tf.keras.models.Model(inputs=model.layers[0].input
+                                                       , outputs=model.layers[-1].input)
+                #getting encoding part for training sample
+                encoding_training = model_encoding.predict(X_train)
+                #getting encoding part for testing sample
+                encoding_testing = model_encoding.predict(X_test)
+                # clustering prediction
+                kmeans = KMeans(n_clusters=i_p_out).fit(encoding_training)
+                y_pred = kmeans.predict(encoding_testing)
+                
+                df_split = pd.DataFrame(y_pred, columns=['prediction'])
+                df_split['ground_truth'] = y_test
                 df_split['design'] = design_name
                 df_split['index_split'] = i
                 df_split['split'] = split
+                df_split['cell_out']='cell_out_'+str(i_p_out)
                 df_nn = pd.concat([df_nn, df_split])
 
                 model.save(os.path.join(loc_output, 'cell_out_'+str(i_p_out), 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
