@@ -215,15 +215,13 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                 #obtaining encoding part from model
                 model_encoding = tf.keras.models.Model(inputs=model.layers[0].input
                                                        , outputs=model.layers[-1].input)
-                #getting encoding part for training sample
-                encoding_training = model_encoding.predict(X_train)
                 #getting encoding part for testing sample
                 encoding_testing = model_encoding.predict(X_test)
                 # clustering prediction
                 kmeans = KMeans(n_clusters=i_p_out).fit(encoding_training)
-                y_pred = kmeans.predict(encoding_testing)
+                y_kmeans_label = kmeans.labels_
                 
-                df_split = pd.DataFrame(y_pred, columns=['prediction'])
+                df_split = pd.DataFrame(y_kmeans_label, columns=['k_means_label'])
                 df_split['ground_truth'] = y_test
                 df_split['design'] = design_name
                 df_split['index_split'] = i
