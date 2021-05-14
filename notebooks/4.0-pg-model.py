@@ -47,7 +47,7 @@ import datetime as dt
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold, train_test_split, LeaveOneGroupOut, LeavePGroupsOut
 from sklearn.cluster import KMeans
-
+import glob
 from numba import cuda
 from tensorflow import keras
 
@@ -69,12 +69,13 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
     print('design_name: {0}\n, bio_knowledge: {1}\n, dense_nodes: {2}\n, second_hidden_layer: {3}\n, optimizer: {4}\n, dataset: {5}\n, split: {6}\n, filter_gene_space: {7}'.format(design_name, bio_knowledge, dense_nodes, second_hidden_layer, optimizer, dataset, split, filtering_gene_space))
     time_start = dt.datetime.now().time().strftime('%H:%M:%S') # = time.time() dt.datetime.now().strftime('%Y%m%d_%I%M%S%p')
         
-        
     if filtering_gene_space==True and bio_knowledge!=None:
         print('INFO, design is fully connected. Cannot filter the gene space. all the genes in dataset is using!!' )
 #     the output location
-    loc_output = os.path.join(src.DIR_MODELS, dataset.split('/')[1], split)
-    src.define_folder(loc_=loc_output)
+    loc_output_models = os.path.join(src.DIR_MODELS, dataset.split('/')[1], split)
+    src.define_folder(loc_=loc_output_models)
+    loc_output_reports_clustering = os.path.join(src.DIR_REPORTS, 'clustering', dataset.split('/')[1], split)
+    src.define_folder(loc_=loc_output_reports_clustering)
     
     df_bio, df_dense = pd.DataFrame(), pd.DataFrame()
     split_index='' # for output text information
@@ -174,15 +175,16 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
             df_split['split'] = split
             df_nn = pd.concat([df_nn, df_split])
 
-            model.save(os.path.join(loc_output, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
+            model.save(os.path.join(loc_output_models, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
 
-        df_nn.to_pickle(os.path.join(loc_output, 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
-        print('file is exported in ', os.path.join(loc_output, 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
+        df_nn.to_pickle(os.path.join(loc_output_models, 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
+        print('file is exported in ', os.path.join(loc_output_models, 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
 
             
     elif split=='LeavePGroupsOut':
         for i_p_out in n_p_leave_out:
-            src.define_folder(loc_=os.path.join(loc_output, 'cell_out_'+str(i_p_out)))
+            df_metric_all, df_nn = pd.DataFrame(), pd.DataFrame()
+            src.define_folder(loc_=os.path.join(loc_output_models, 'cell_out_'+str(i_p_out)))
             lpgo = LeavePGroupsOut(n_groups=i_p_out)
             ids = np.random.choice(len(list(lpgo.split(X, y, groups))), p_out_iteration).tolist()
             lpgo_split_random_selection = [list(lpgo.split(X, y, groups))[i] for i in ids]
@@ -218,22 +220,22 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                 #getting encoding part for testing sample
                 encoding_testing = model_encoding.predict(X_test)
                 # clustering prediction
-                kmeans = KMeans(n_clusters=i_p_out).fit(encoding_testing)
+                kmeans = KMeans(n_clusters=i_p_out, random_state=rand_state).fit(encoding_testing)
                 y_pred = kmeans.predict(encoding_testing)
                 
                 df_split = pd.DataFrame(y_pred, columns=['prediction'])
-                df_split['ground_truth'] = y_test
+                df_split['ground_truth'] = y_test.values
                 df_split['design'] = design_name
                 df_split['index_split'] = i
                 df_split['split'] = split
                 df_split['cell_out']='cell_out_'+str(i_p_out)
                 df_nn = pd.concat([df_nn, df_split])
-
-                model.save(os.path.join(loc_output, 'cell_out_'+str(i_p_out), 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
+                
+                model.save(os.path.join(loc_output_models, 'cell_out_'+str(i_p_out), 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
             
-            df_nn.to_pickle(os.path.join(loc_output, 'cell_out_'+str(i_p_out), 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
-            print('file is exported in ', os.path.join(loc_output, 'cell_out'+str(i_p_out), 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
-
+            df_nn.to_pickle(os.path.join(loc_output_models, 'cell_out_'+str(i_p_out), 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
+            print('file is exported in ', os.path.join(loc_output_models, 'cell_out_'+str(i_p_out), 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
+            
     elif split=='train_test_split':
         print('train_test_split split applied! Test size is, ', test_size)
         X_train, X_test, y_train, y_test = train_test_split(X, y_ohe, test_size=test_size
@@ -262,7 +264,7 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
         df_split['split'] = split
         df_nn = pd.concat([df_nn, df_split])
         
-        model.save(os.path.join(loc_output, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.h5'))
+        model.save(os.path.join(loc_output_models, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.h5'))
 
     elif split=='None':
         print('Full dataset!!')
@@ -283,7 +285,7 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                   , callbacks=callbacks
                   , validation_split=val_split)
         
-        model.save(os.path.join(loc_output, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.h5'))
+        model.save(os.path.join(loc_output_models, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.h5'))
 
     if split =='StratifiedKFold' or split =='RepeatedStratifiedKFold':
         
@@ -321,13 +323,30 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
             df_nn = pd.concat([df_nn, df_split])
             
             if split =='StratifiedKFold':
-                model.save(os.path.join(loc_output, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
+                model.save(os.path.join(loc_output_models, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
   
 
     if split!='LeavePGroupsOut' and split!='LeaveOneGroupOut':
-        df_nn.to_pickle(os.path.join(loc_output,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
-        print('file is exported in ', os.path.join(loc_output,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
+        df_nn.to_pickle(os.path.join(loc_output_models,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
+        print('file is exported in ', os.path.join(loc_output_models,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
     
+    # Calculating clustering metrics
+    if split=="LeavePGroupsOut":
+        df_all_result = pd.DataFrame()
+        for i in sorted(glob.glob(os.path.join(loc_output_models, 'cell_out_*/result_'+design_name+'*'))):
+            print('******************* FILE NAME, ', i)
+            df_temp = pd.read_pickle(i)
+            df_all_result = pd.concat([df_all_result, df_temp])
+
+        df_metric = src.calculate_clustering_metrics(df_all_result)
+
+        df_mean = df_metric.groupby(['design'
+                                     ,'metric'
+                                     ,'cell_out']).mean().reset_index().pivot(index=['cell_out'
+                                                                                     ,'design']
+                                                                              , columns='metric', values='score')
+        df_mean.to_csv(os.path.join(loc_output_reports_clustering, 'metrics_clustering_'+design_name+'.csv'))
+
     cuda.select_device(0)
     cuda.close()
     
