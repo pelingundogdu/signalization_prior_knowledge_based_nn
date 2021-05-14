@@ -183,7 +183,14 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
         for i_p_out in n_p_leave_out:
             src.define_folder(loc_=os.path.join(loc_output_models, 'cell_out_'+str(i_p_out)))
             lpgo = LeavePGroupsOut(n_groups=i_p_out)
-            ids = np.random.choice(len(list(lpgo.split(X, y, groups))), p_out_iteration).tolist()
+            print(len(list(lpgo.split(X, y, groups))))
+            if (len(list(lpgo.split(X, y, groups))) < p_out_iteration):
+                n_iteration = len(list(lpgo.split(X, y, groups)))
+                print(f'WARNING - The total number of combination ({len(list(lpgo.split(X, y, groups)))}) when leaving {i_p_out} cell out is less than given iteration ({p_out_iteration}) number!!')
+            else:
+                n_iteration = p_out_iteration
+            
+            ids = np.random.choice(len(list(lpgo.split(X, y, groups))), n_iteration, replace=False).tolist()
             lpgo_split_random_selection = [list(lpgo.split(X, y, groups))[i] for i in ids]
 
             for i, indexes in enumerate(lpgo_split_random_selection):
