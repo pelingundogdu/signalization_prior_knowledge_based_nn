@@ -6,8 +6,6 @@ import os
 # import pyreadr
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import *
-
 import seaborn as sns
 import matplotlib as mpl
 import matplotlib.pyplot as plt

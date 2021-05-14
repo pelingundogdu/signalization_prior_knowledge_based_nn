@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
+from numpy.random import seed
+seed(91)
+import tensorflow as tf
+tf.random.set_seed(91)
 # Required libraries
 import os
 # import glob
 import numpy as np
 import pandas as pd
 import datetime as dt
-import tensorflow as tf
 from tensorflow import keras
+rand_state=91
 
 def proposed_NN(X, y, bio_layer, select_optimizer, select_activation, **kwargs):    
     '''    
@@ -24,6 +26,10 @@ def proposed_NN(X, y, bio_layer, select_optimizer, select_activation, **kwargs):
         The truth label value of training set
     bio_layer : dataframe
         The biological knowledge of the nodes which are in 1st hidden layer
+    select_optimizer : str
+        Defining the optimizer parameter, choosing Adam or SGD
+    select_optimizer : str
+        Selec the optimizer parameter, choosing Adam or SGD
     
     **second_layer : boolean (default value is False)
         The definition of the 2nd layer. If it is FALSE then the design is with 1-Layer, if it is TRUE then the second hidden layer is included.
@@ -52,14 +58,15 @@ def proposed_NN(X, y, bio_layer, select_optimizer, select_activation, **kwargs):
         print('-- activation        ,', select_activation)
         
         keras.backend.clear_session()
+        init = keras.initializers.GlorotUniform(seed=rand_state)
         
         strategy = tf.distribute.MirroredStrategy()
         with strategy.scope():
-
+            
             model = keras.models.Sequential()
             model.add(keras.layers.Dense(units = unit_size
                                          , input_dim=input_size
-                                         , kernel_initializer='glorot_uniform'
+                                         , kernel_initializer=init
                                          , bias_initializer='zeros'
                                          , activation=select_activation
                                          , name='layer1'))
