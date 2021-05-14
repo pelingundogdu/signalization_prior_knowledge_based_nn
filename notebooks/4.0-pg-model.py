@@ -131,8 +131,6 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                                            , patience=3       # "no longer improving" being further defined as "for at least 3 epochs"
                                            , verbose=1 ) ]
     
-    df_nn = pd.DataFrame()
-    
     if split == 'StratifiedKFold':
         stratified = StratifiedKFold(n_splits=skf_split
                                      , shuffle=True
@@ -183,7 +181,6 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
             
     elif split=='LeavePGroupsOut':
         for i_p_out in n_p_leave_out:
-            df_metric_all, df_nn = pd.DataFrame(), pd.DataFrame()
             src.define_folder(loc_=os.path.join(loc_output_models, 'cell_out_'+str(i_p_out)))
             lpgo = LeavePGroupsOut(n_groups=i_p_out)
             ids = np.random.choice(len(list(lpgo.split(X, y, groups))), p_out_iteration).tolist()
@@ -227,15 +224,13 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                 df_split['ground_truth'] = y_test.values
                 df_split['design'] = design_name
                 df_split['index_split'] = i
-                df_split['split'] = split
+#                 df_split['split'] = split
                 df_split['cell_out']='cell_out_'+str(i_p_out)
                 df_nn = pd.concat([df_nn, df_split])
                 
-                model.save(os.path.join(loc_output_models, 'cell_out_'+str(i_p_out), 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
-            
-            df_nn.to_pickle(os.path.join(loc_output_models, 'cell_out_'+str(i_p_out), 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
-            print('file is exported in ', os.path.join(loc_output_models, 'cell_out_'+str(i_p_out), 'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
-            
+#                 model.save(os.path.join(loc_output_models, 'cell_out_'+str(i_p_out), 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+str(i)+'_'+optimizer+'.h5'))
+#             df_co_all = pd.concat([df_co_all, df_nn])
+        
     elif split=='train_test_split':
         print('train_test_split split applied! Test size is, ', test_size)
         X_train, X_test, y_train, y_test = train_test_split(X, y_ohe, test_size=test_size
@@ -333,12 +328,8 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
     # Calculating clustering metrics
     if split=="LeavePGroupsOut":
         df_all_result = pd.DataFrame()
-        for i in sorted(glob.glob(os.path.join(loc_output_models, 'cell_out_*/result_'+design_name+'*'))):
-            print('******************* FILE NAME, ', i)
-            df_temp = pd.read_pickle(i)
-            df_all_result = pd.concat([df_all_result, df_temp])
-
-        df_metric = src.calculate_clustering_metrics(df_all_result)
+        
+        df_metric = src.calculate_clustering_metrics(df_nn)
 
         df_mean = df_metric.groupby(['design'
                                      ,'metric'
