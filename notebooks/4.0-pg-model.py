@@ -29,25 +29,26 @@ EXPORTED FILE(s) LOCATION
     ./models/NN/{EXPERIMENT}/{MODEL-RESULT}.csv
 '''
 
-# to get reproducible results
-from numpy.random import seed
-seed(91)
-import tensorflow as tf
-tf.random.set_seed(91)
-
-# importing default libraries
+SEED = 91
 import os, argparse, sys
 sys.path.append('./')
 # importing scripts in scripts folder
 from scripts import config as src
 
+# to get reproducible results
+import tensorflow as tf
+tf.random.set_seed(SEED)
 import numpy as np
+np.random.seed(SEED)
+os.environ["TF_DETERMINISTIC_OPS"] = "1"
+
 import pandas as pd
 import datetime as dt
+
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold, train_test_split, LeaveOneGroupOut, LeavePGroupsOut
 from sklearn.cluster import KMeans
-import glob
+
 from numba import cuda
 from tensorflow import keras
 
@@ -57,7 +58,7 @@ p_out_iteration = 20
 epochs_default=100 # for model design
 batch_default=10   # for model design
 val_split=0.1      # for model design
-rand_state = 91    # dataset split
+rand_state = SEED  # dataset split
 test_size = 0.3    # train_test_split
 skf_split = 5      # number of split StratifiedKFold
 rskf_split = 10    # number of split for
