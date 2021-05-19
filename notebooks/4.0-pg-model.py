@@ -289,6 +289,10 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
                   , callbacks=callbacks
                   , validation_split=val_split)
         
+        #obtaining encoding part from model
+        model_encoding = tf.keras.models.Model(inputs=model.layers[0].input
+                                               , outputs=model.layers[-1].input)
+        
         model.save(os.path.join(loc_output_models, 'design_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.h5'))
 
     if split =='StratifiedKFold' or split =='RepeatedStratifiedKFold':
@@ -333,7 +337,10 @@ def NN_training(design_name, bio_knowledge, dense_nodes, second_hidden_layer, op
     if split!='LeavePGroupsOut' and split!='LeaveOneGroupOut':
         df_nn.to_pickle(os.path.join(loc_output_models,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
         print('file is exported in ', os.path.join(loc_output_models,'result_'+design_name+'_'+dataset.split('.')[0].split('/')[-1]+'_'+optimizer+'.pck'))
-
+    
+    if analysis == 'retrieval_mouse':
+        src.retrieval.main(model_encoding, 0, 'saved_model', 0, 'all', design_name)
+    
     print(df_nn)
     # Calculating clustering metrics
     if split=="LeavePGroupsOut":
@@ -363,6 +370,7 @@ if __name__=='__main__':
     parser.add_argument('-ds'                      , '--dataset', help='the experiment dataset')
     parser.add_argument('-split'                   , '--split', help='specifying dataset split, etc, train_test_split or KFold')
     parser.add_argument('-filter_gene_space'       , '--filter_space', help='filtering gene space with given bio knowledge set')
+    parser.add_argument('-analysis'                , '--analysis', help='analysis')
     
     
     if len(sys.argv)==1:
@@ -379,5 +387,6 @@ if __name__=='__main__':
                 , args.dataset
                 , args.split
                 , eval(args.filter_space)
+                , args.analysis
                )
     
