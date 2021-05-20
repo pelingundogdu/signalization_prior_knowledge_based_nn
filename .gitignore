@@ -8,9 +8,9 @@ notebooks/red_green.ipynb
 notebooks/Untit*.ipynb
 mouse_manuel_experiment/
 notebooks/*Copy*
-scrpts/*Copy*
+scripts/*Copy*
 notebooks/*SIL*
-scrpts/*SIL*
+scripts/*SIL*
 
 #################################### DEFAULT ####################################
 # Byte-compiled / optimized / DLL files
