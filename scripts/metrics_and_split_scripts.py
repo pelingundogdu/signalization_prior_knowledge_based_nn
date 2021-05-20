@@ -4,9 +4,9 @@
 # Required libraries
 import numpy as np
 import pandas as pd
+from sklearn.neighbors import LocalOutlierFactor
 from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold, train_test_split, LeaveOneGroupOut, LeavePGroupsOut
 from sklearn.metrics import homogeneity_score, completeness_score, v_measure_score, adjusted_rand_score, adjusted_mutual_info_score, fowlkes_mallows_score, accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score
-
 
 def calculate_clustering_metrics(dataframe):
     print('calculate_clustering_metrics')
@@ -182,3 +182,17 @@ def generate_training_testing_samples(X, y, y_ohe, y_category, groups, SEED
         
 
     return (X_train_list, y_train_list, X_test_list, y_test_list, split_index_list, co_list)
+
+
+def calculate_threshold(encoding_with_seen, encoding_with_unseen, y_with_seen, y_with_unseen):
+    lof = LocalOutlierFactor(novelty=True)
+    lof.fit(encoding_with_seen)
+
+    df_score_unseen = pd.concat([ y_with_unseen, pd.DataFrame(lof.score_samples(encoding_with_unseen), columns=['score'])], axis=1)
+    df_score_seen = pd.concat([ y_with_seen, pd.DataFrame(lof.score_samples(encoding_with_seen), columns=['score'])], axis=1)
+
+    # Calculated threshold value
+    threshold = np.mean(df_score_seen.groupby('cell_type').aggregate(['mean', 'std'])['score']['mean'] 
+                        - 0.5*df_score_seen.groupby('cell_type').aggregate(['mean', 'std'])['score']['std'])
+    print('Threshold value from reference dataset, ', threshold)
+    return threshold, df_score_seen, df_score_unseen
