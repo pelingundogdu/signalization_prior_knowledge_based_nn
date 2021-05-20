@@ -7,6 +7,10 @@ project_tree.ipynb
 notebooks/red_green.ipynb
 notebooks/Untit*.ipynb
 mouse_manuel_experiment/
+notebooks/*Copy*
+scrpts/*Copy*
+notebooks/*SIL*
+scrpts/*SIL*
 
 #################################### DEFAULT ####################################
 # Byte-compiled / optimized / DLL files
