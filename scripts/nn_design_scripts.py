@@ -97,12 +97,3 @@ def proposed_NN(X, y, bio_layer, select_optimizer, select_activation, **kwargs):
     except:
         print("Unexpected error:", sys.exc_info()[0])
         
-
-        
-def generate_pred_result(y_pred, y_test, ohe):
-    
-    df_split = pd.DataFrame(y_pred, columns=list(pd.DataFrame(ohe.categories_).iloc[0,:]))
-    df_split['prediction'] = ohe.inverse_transform(y_pred).reshape(1, -1)[0]
-    df_split['ground_truth'] = ohe.inverse_transform(y_test).reshape(1, -1)[0]
-
-    return df_split
