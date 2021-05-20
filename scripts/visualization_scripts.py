@@ -94,28 +94,13 @@ def plot_expression_and_sum(df, title, random_genes, png=None, output=None):
         plt.savefig(os.path.join(output, png), dpi=300, bbox_inches = 'tight');
         print('EXPORTED!!, ', os.path.join(output, png))
     
-# def plot_pathways(df, title, caption, axes, save, output, png):
-#     sns.boxplot(x="variable", y="value", data=df, ax=axes)
-#     axes.set_xlabel('genes')
-#     axes.set_ylabel('expression value')
-#     axes.set_xticks([])
-# #     axes.tick_params(axis='y', labelsize=8)
-# #     axes.tick_params(axis='x', labelsize=8)
-#     axes.set_title(caption,fontsize=SMALL_SIZE)
+def scibet_confusion_matrix(dataframe):
+    cmap = mpl.cm.Blues(np.linspace(0,1,350))
+    cmap = mpl.colors.ListedColormap(cmap[10:,:-1])
+
+    mpl.pyplot.figure(figsize=(12,6))
+
+    g = sns.heatmap(dataframe.div(dataframe.sum(axis=1).values, axis='rows'), cmap=cmap, annot=True);
+    g.set(xlabel='PREDICTION', ylabel='GROUND TRUTH');
     
-#     if (save==True):
-#         fig, ax = plt.subplots(figsize=(10,5))
-#         sns.boxplot(x="variable", y="value", data=df, ax=ax)
-#         plt.xlabel('genes')
-#         plt.ylabel('expression value')
-# #         plt.xticks(rotation=45)
-#         plt.title(title);
-#     #     plt.text(.45, .1, caption, ha='center', size=BIGGER_SIZE)
-#         plt.figtext(0.5, -0.01, caption, wrap=True, horizontalalignment='center', fontsize=MEDIUM_SIZE)
-#         plt.xticks([])
-#         plt.tight_layout();
-#         # plt.show()
-#         plt.savefig(os.path.join(output, png), dpi=300, bbox_inches = 'tight');
-#         plt.close(fig);
-#         print('EXPORTED!!, ', os.path.join(output, png))
-    
+    return g.get_figure()
