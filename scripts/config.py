@@ -13,6 +13,7 @@ DIR_CONFIG = os.path.join(DIR_ROOT,'scripts')
 DIR_DATA = os.path.join(DIR_ROOT,'data')
 DIR_MODELS = os.path.join(DIR_ROOT,'models')
 DIR_REPORTS = os.path.join(DIR_ROOT,'reports')
+DIR_NOHUP = os.path.join(DIR_ROOT,'nohup')
 
 DIR_DATA_EXTERNAL = os.path.join(DIR_DATA,'external')
 DIR_DATA_INTERIM = os.path.join(DIR_DATA,'interim')
@@ -29,4 +30,5 @@ from scripts.model_scripts import *
 from scripts.nn_design_scripts import *
 from scripts.path_scripts import *
 from scripts.visualization_scripts import *
-from scripts.metrics_scripts import *
+from scripts.metrics_and_split_scripts import *
+import scripts.retrieval as retrieval
