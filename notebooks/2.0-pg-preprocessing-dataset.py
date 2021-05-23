@@ -32,7 +32,7 @@ from scripts import config as src
 import pandas as pd
 import numpy as np
 
-def preprocessing_dataset(experiment, dataset, sample_wise, scale, target_column_index, ofn):
+def preprocessing_dataset(experiment, dataset, sample_wise, gene_wise, scale, target_column_index, ofn):
     
     try:
         
@@ -58,6 +58,11 @@ def preprocessing_dataset(experiment, dataset, sample_wise, scale, target_column
             df = src.sample_wise_normalization(df)
             ofn = ofn+'_sw'
 
+#         GENE-WISE NORMALIZATION
+        if gene_wise==True:
+            df = src.gene_wise_normalization(df)
+            ofn = ofn+'_gw'
+            
 #         APPLYING DEFINED NORMALIZATION
         if scale != 'None':
             df = src.scaler_normalization(df, scale)
@@ -82,6 +87,7 @@ if __name__=='__main__':
     parser.add_argument('-exp', '--experiment', help='specify the experiment, the experiment name should be located in ./data/external')
     parser.add_argument('-ds' , '--dataset', help='specify the dataset, in ./data/external/{FILE NAME}')
     parser.add_argument('-sw' , '--sample_wise', help='applying sample-wise normalization')
+    parser.add_argument('-gw' , '--gene_wise', help='applying gene-wise normalization')
     parser.add_argument('-sc' , '--scale', help='defining scaling operation, None for keeping raw samples')
     parser.add_argument('-tci', '--target_column_index', help='index number of target column, -1 for last column')
     parser.add_argument('-ofn', '--output_file_name', help='name of the preprocessed dataset')
@@ -96,6 +102,7 @@ if __name__=='__main__':
     preprocessing_dataset(args.experiment
                           , args.dataset
                           , eval(args.sample_wise)
+                          , eval(args.gene_wise)
                           , args.scale
                           , int(args.target_column_index)
                           , args.output_file_name)
