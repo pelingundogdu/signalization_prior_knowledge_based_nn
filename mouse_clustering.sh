@@ -111,6 +111,6 @@ python notebooks/4.0-pg-model.py \
     -filter_gene_space False
     
     
-python notebooks/8.3-pg-clustering_result.py
+python scripts/clustering_result.py
     
 ############################################### MOUSE EXPERIMENT ###############################################
