@@ -31,5 +31,4 @@ from scripts.nn_design_scripts import *
 from scripts.path_scripts import *
 from scripts.visualization_scripts import *
 from scripts.metrics_and_split_scripts import *
-# import scripts.retrieval as retrieval
 from scripts.scibet_compare import *

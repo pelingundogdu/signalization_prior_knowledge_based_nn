@@ -5,6 +5,8 @@
 import os
 import numpy as np
 import pandas as pd
+import datetime as dt
+from scripts import config as src
 
 def define_folder(loc_):
     """
@@ -47,3 +49,19 @@ def define_folder(loc_):
         print('FOLDER information, ', path_)
     
     return(path_)
+
+
+class Export_to_text:
+    def __init__(self, experiment, detail, loc):
+        self.experiment = experiment
+        self.detail = detail
+        self.loc = loc
+
+    def save(self, text, file_operation='a+'):
+        
+        info_text = os.path.join(self.loc, 'info_'+self.detail+'.txt')
+        
+        f=open(info_text, file_operation)
+        f.write(text)
+        f.write('\n\n')
+        f.close()
