@@ -74,9 +74,34 @@ def sample_wise_normalization(dataset):
         Scaled dataset
     '''
     print('    -> sample wise normalization implemented!')
-    df_sample_wise = pd.concat([ dataset.iloc[:, :-1].div(dataset.iloc[:, :-1].sum(axis=1), axis=0)*1e6
+    sum_ = np.sum(dataset.iloc[:, :-1], axis=1)
+    sum_.values[sum_.values == 0.0] = 1e-10
+    df_sample_wise = pd.concat([ dataset.iloc[:, :-1].div(sum_, axis=0)*1e6
                                 , dataset.iloc[:, -1]], axis=1)
     return(df_sample_wise)
+
+def gene_wise_normalization(dataset):
+    '''
+    Applying gene-wise normalization into dataset
+
+    Parameters
+    ----------
+    dataset : dataframe
+
+    Returns
+    -------
+    df_scaler : dataframe
+        Scaled dataset
+    '''
+    print('    -> gene wise normalization implemented!')
+            
+    mean_ = np.mean(dataset.iloc[:, :-1], axis=0)
+    std_ = np.std(dataset.iloc[:, :-1], axis=0)
+    std_.values[std_.values == 0.0] = 1e-10    
+    df_gene_wise = pd.concat([ (dataset.iloc[:, :-1] - mean_).div(std_)
+                              , dataset.iloc[:, -1]], axis=1)
+    return(df_gene_wise)
+
 
 def scaler_normalization(dataset, scaler_name):
     '''
