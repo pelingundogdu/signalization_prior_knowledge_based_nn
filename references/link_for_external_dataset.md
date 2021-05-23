@@ -28,7 +28,8 @@ implemented into author version : ***log1p***
 FOLDER NAME                     : exper_mouse
 URL                             : http://sb.cs.cmu.edu/scnn/
 INFO                            : Shared the ***TPM*** normalization version by authors.
-implemented into author version : ***StandarScaler(gene based)***
+implemented into author version : ***sample wise and gene normalization***
+                                  (old version ***StandarScaler***)
 
 ==============================================================================================================================
 **The final version of dataset after our implementations which defined in "implemented into author version" are located into data/proccessd/{EXPERIMENT_NAME}**
