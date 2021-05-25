@@ -66,16 +66,13 @@ def calculate_f1_recall_precision_metrics_overall(dataframe):
 def calculate_f1_recall_precision_metrics_cell_type_detail(dataframe):
     print('calculate_f1_recall_precision_metrics_cell_type_detail')
     list_f1, list_precision, list_recall= [],[],[]
-    labels_ = np.unique(dataframe['prediction'])
     cell_types = sorted(dataframe['ground_truth'].unique())
     cell_types.extend(['index_split','metric'])
-
     for i_exp in dataframe['index_split'].unique():
         df_temp = dataframe[dataframe['index_split']==i_exp]
-
-        list_f1.append(list(f1_score(df_temp['ground_truth'], df_temp['prediction'], average=None, labels=labels_ )) + [i_exp, 'f1'])
-        list_precision.append(list(precision_score(df_temp['ground_truth'], df_temp['prediction'], average=None, labels=labels_ )) + [i_exp, 'precision'])
-        list_recall.append(list(recall_score(df_temp['ground_truth'], df_temp['prediction'], average=None, labels=labels_ )) + [i_exp, 'recall'])
+        list_f1.append(list(f1_score(df_temp['ground_truth'], df_temp['prediction'], average=None)) + [i_exp, 'f1'])
+        list_precision.append(list(precision_score(df_temp['ground_truth'], df_temp['prediction'], average=None )) + [i_exp, 'precision'])
+        list_recall.append(list(recall_score(df_temp['ground_truth'], df_temp['prediction'], average=None )) + [i_exp, 'recall'])
 # , labels=np.unique(df_temp['prediction']
         result = [element for lis in [list_f1, list_precision, list_recall] for element in lis]
 
@@ -88,7 +85,8 @@ def generate_training_testing_samples(X, y, y_ohe, y_category, groups, SEED
                                       , stratified_split, stratified_repeat
                                       , n_p_leave_out, p_out_iteration
                                       , test_size
-                                      , export_to_text):
+                                      , export_to_text
+                                      , train_test_repeat):
 
 #         Creating empty training and testing list, will use in following steps to store the index values of splits
     X_train_list, y_train_list, X_test_list, y_test_list, split_index_list, co_list = [], [], [], [], [], []
@@ -161,22 +159,26 @@ def generate_training_testing_samples(X, y, y_ohe, y_category, groups, SEED
         del(X_train, X_test, y_train, y_test, i_p_out, i)
 
     elif split =='train_test_split':
-        export_to_text.save(text=f'{split} split applied!! Test size is {test_size} !!')
-        X_train, X_test, y_train, y_test = train_test_split(X, y_ohe
-                                                            , test_size=test_size
-                                                            , shuffle=True
-                                                            , random_state=SEED
-                                                            , stratify=y_ohe)
-        X_train_list.append(X_train)
-        X_test_list.append(X_test)
-        y_train_list.append(y_train)
-        y_test_list.append(y_test)
-        split_index_list.append(0)
+        export_to_text.save(text=f'{split} split applied!! Test size is {test_size} and the iteration is {train_test_repeat}!!')
+        print(f'{split} split applied!! Test size is {test_size} and the iteration is {train_test_repeat}!!')
+        for i in range(train_test_repeat):
+            print(f'train_test_split iteration {i+1} / {train_test_repeat}')
+            X_train, X_test, y_train, y_test = train_test_split(X, y_ohe
+                                                                , test_size=test_size
+                                                                , shuffle=True
+                                                                , random_state=SEED+i
+                                                                , stratify=y_ohe)
+            X_train_list.append(X_train)
+            X_test_list.append(X_test)
+            y_train_list.append(y_train)
+            y_test_list.append(y_test)
+            split_index_list.append(i)
 
-        del(X_train, X_test, y_train, y_test)
+            del(X_train, X_test, y_train, y_test)
 
     else:
         export_to_text.save(text=f'{split} split applied!! Full dataset will use in fitting step!!')
+        print(f'{split} split applied!! Full dataset will use in fitting step!!')
         X_train_list.append(X)
         y_train_list.append(y_ohe)
         
