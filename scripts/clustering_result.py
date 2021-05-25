@@ -35,4 +35,4 @@ df_result = df_result[['cell_out','design','homogeneity','completeness','v_measu
 
 for i_co in sorted(set(df_result['cell_out'])):
     df_temp = df_result[(df_result['cell_out']==i_co)]
-    df_temp.to_csv(os.path.join(loc_output, f'metrics_{i_co}.csv'), index=False)
+    df_temp.to_csv(os.path.join(loc_output, f'results_{i_co}.csv'), index=False)
