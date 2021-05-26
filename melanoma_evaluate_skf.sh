@@ -4,6 +4,18 @@ date
 
 echo "EVALUATE StratifiedKFold for MELANOMA EXPERIMENT"
 ############################################## MELANOMA EXPERIMENT ##############################################
+# 1-LAYER DENSE
+python notebooks/4.0-pg-model.py \
+    -design 1_layer_dense \
+    -first_hidden_layer_pbk None \
+    -first_hidden_layer_dense 100 \
+    -second_hidden_layer False \
+    -optimizer Adam \
+    -activation relu \
+    -ds processed/exper_melanoma/reference_log1p.pck \
+    -analysis evaluate_skf \
+    -filter_gene_space False
+
 # 1-LAYER SIGNALING
 python notebooks/4.0-pg-model.py \
     -design 1_layer_signaling \
