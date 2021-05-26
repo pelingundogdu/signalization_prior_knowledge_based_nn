@@ -6,16 +6,16 @@ echo "RETRIEVAL ANALYSIS for MOUSE EXPERIMENT"
 ############################################### MOUSE EXPERIMENT ###############################################
 # 1-LAYER DENSE100
 python notebooks/4.0-pg-model.py \
-    -design 1_layer_dense100 \
+    -design 1_layer_dense100_sw \
     -first_hidden_layer_pbk None \
     -first_hidden_layer_dense 100 \
     -second_hidden_layer False \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
-
+    
 # 1-LAYER and 2-LAYER SIGNALING
 python notebooks/4.0-pg-model.py \
     -design 1_layer_signaling \
@@ -24,7 +24,7 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer False \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
     
@@ -35,7 +35,7 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer True \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
 
@@ -47,7 +47,7 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer False \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
     
@@ -58,7 +58,7 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer True \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
     
@@ -71,7 +71,7 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer False \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
 
@@ -83,7 +83,7 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer False \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
 
@@ -95,7 +95,7 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer False \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
     
@@ -106,10 +106,12 @@ python notebooks/4.0-pg-model.py \
     -second_hidden_layer False \
     -optimizer SGD \
     -activation tanh \
-    -ds processed/exper_mouse/mouse_learning_ss.pck \
+    -ds processed/exper_mouse/mouse_learning_sw_gw.pck \
     -analysis retrieval \
     -filter_gene_space False
+
+python scripts/retrieval-summary.py ./reports/retrieval/exper_mouse/
+
 ############################################### MOUSE EXPERIMENT ###############################################
 
 
-python scripts/retrieval-summary.py reports/retrieval/exper_mouse/
