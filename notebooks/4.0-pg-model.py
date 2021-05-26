@@ -62,7 +62,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         p_out_iteration = 20       # For LeavePGroupsOut split, the iteration number for randomly leaving-out cell types        # 20
         stratified_split = 10      # For StratifiedKFold and RepeatedStratifiedKFold, the split number                          # 10
         stratified_repeat = 50     # For RepeatedStratifiedKFold, the number of iteration                                       # 50
-        
+        train_test_repeat = 1      # For train_test_split repeat number, to compare the performance of designs this number is defining as 100
         # VALUES for neuran network
         epochs_default = 100       # the number of epoch
         batch_default = 10         # the size of batch
@@ -84,6 +84,9 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             split = 'RepeatedStratifiedKFold'
         elif analysis == 'retrieval':
             split = 'None'
+        elif analysis == 'performance':
+            split = 'train_test_split'
+            train_test_repeat = 100
         else:
             raise Exception (f'INVALID analysis value!! -- {analysis}')
         
@@ -199,7 +202,8 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                                                                                                                               , stratified_split, stratified_repeat
                                                                                                                               , n_p_leave_out, p_out_iteration
                                                                                                                               , test_size
-                                                                                                                              , export_to_txt)
+                                                                                                                              , export_to_txt
+                                                                                                                              , train_test_repeat)
         
 #         Model creating and fitting steps
         for i in range(len(X_train_list)):
@@ -293,19 +297,21 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             export_to_txt.save(text=f'clustering metrics saved into {loc_output_reports_analysis}')
             print(f'clustering metrics saved into {loc_output_reports_analysis}')
             
-        if analysis =='evaluate_skf' or analysis=='evaluate_rskf':
+        if analysis =='evaluate_skf' or analysis=='evaluate_rskf' or analysis=='performance':
             df_metric_overall = src.calculate_f1_recall_precision_metrics_overall(df_result)
             df_metric_overall['design'] = design_name
-            df_metric_overall.to_csv(os.path.join(loc_output_reports_analysis, 'metrics_overall_'+design_name+'.csv'), index=False)
+            df_metric_overall.to_csv(os.path.join(loc_output_reports_analysis, f'metrics_overall_{design_name}_{dataset_name}_{optimizer}_{activation}.csv'), index=False)
             df_metric_detail = src.calculate_f1_recall_precision_metrics_cell_type_detail(df_result)
             df_metric_detail['design'] = design_name
-            df_metric_detail.to_csv(os.path.join(loc_output_reports_analysis, 'metrics_detail_'+design_name+'.csv'), index=False)
+            df_metric_detail.to_csv(os.path.join(loc_output_reports_analysis, f'metrics_cell_type_detail_{design_name}_{dataset_name}_{optimizer}_{activation}.csv'), index=False)
             export_to_txt.save(text=f'F1-precision-recall metrics saved into {loc_output_reports_analysis}')
             print(f'F1-precision-recall metrics saved into {loc_output_reports_analysis}')
 
     
         if analysis == 'retrieval':
-            retrieval.main(model_encoding, 0, 'saved_model', 0, 'all', 0, 0, design_name)
+            print('RETRIEVAL ANALYSIS -- notebook 4.0')
+            print(model_encoding.summary())
+            retrieval.main(model_encoding, 0, 'saved_model', 1, 'all', 1, 0, design_name)
 
         time_end = dt.datetime.now().time().strftime('%H:%M:%S')
         export_to_txt.save(text=f'Script execution finish time, {time_end}')
