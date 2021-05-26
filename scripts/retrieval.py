@@ -3,9 +3,15 @@
 # pp. e156–e156, Sep. 2017, doi: 10.1093/nar/gkx681.
 
 # Code modified for this project.
-import os
+import os, sys
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+DIR_ROOT = os.path.dirname(os.path.abspath('__file__'))
+print(f'DIR_ROOT {DIR_ROOT} --retrieval.py')
+os.chdir(DIR_ROOT)
+sys.path.append(DIR_ROOT)
+
 
 import os
 import re
@@ -18,14 +24,8 @@ import itertools
 from collections import defaultdict
 
 import scripts.config as src
-
 from scipy.spatial import distance
-# ROOT_DIR = os.path.dirname(os.path.abspath('__file__'))
-# print('ROOT_DIR,', ROOT_DIR)
 
-# dotenv.load_dotenv()
-# important_folder = os.getenv("important_folder")
-# important_folder = os.path.abspath(important_folder)
 important_folder=os.path.abspath('./data/external/exper_mouse/')
 print('IMPORTANT FOLDER, ',important_folder)
 data_file_name = "3-33_integrated_retrieval_set.txt"
@@ -37,13 +37,6 @@ retrieval_map = 1
 project_dir = os.path.abspath(dotenv.find_dotenv())
 project_dir = os.path.dirname(project_dir)
 data_dir = os.path.join(project_dir, "data")
-### # data_file_path = os.path.join(data_dir, "important_data", data_file_name)
-print('DATA_DIR,', data_dir)
-if not os.path.exists(os.path.join(project_dir, "retrieval_analysis_time")):
-    os.mkdir(os.path.join(project_dir, "retrieval_analysis_time"))
-
-output_dir = os.path.join(project_dir, "retrieval_analysis_time")
-
 data_file_path = os.path.join(important_folder, data_file_name)
 print('\nFILE for USING RETRIEVAL ANALYSIS IS ',data_file_path)
 
@@ -130,48 +123,35 @@ def load_integrated_data(
     for line in lines[3:]:
         splits = line.replace("\n", "").split("\t")
         gene = splits[0]
-        # print gene
-        #   if landmark and gene not in landmark_genes.keys():
-        #       continue
         
         sum_all_data.append(list(itertools.chain(np.array(splits[1:], dtype="float") ) ))
         if ref_gene_file != "all" and gene not in group_genes:
             continue
         gene_names.append(gene)
-        # print splits[1:]
         all_data.append(splits[1:])
-        # print len(splits)
     all_data = np.array(all_data, dtype="float32")
-    # print all_data.shape
     
-    if sample_normalize:
-        s = np.array(sum_all_data)[:, :].astype('float').sum(axis=0)
-        all_data = all_data / s * 1000000
-        print('SAMPLE WISE NORMALIZATION APPLIED!!')
-        
-    ####################################################################################################
-    print('    Lenght of gene list, ', len(all_data))
-    print('    all_data',type(all_data))
-    print('    sum_all_data',type(sum_all_data))
-    print('    all_data shape, ', all_data.shape)
-    print('    sum_all_data shape, ', np.asarray(sum_all_data).shape)
-    if sample_normalize:
-        print('    sum shape, ',s.shape)
-#     print('    new_all_data shape, ', new_all_data.shape)
-    ####################################################################################################
-#  ORIGINAL LOCATION of sample_normalization opertation    
 #     if sample_normalize:
-#         for j in range(all_data.shape[1]):
-#             s = np.sum(all_data[:, j])
-#             if s == 0:
-#                 s = 0
-#                 # print 'normalize sum==0: sample',j
-#             else:
-#                 all_data[:, j] = all_data[:, j] / s * 1000000
+#         print('SAMPLE WISE NORMALIZATION APPLIED!!')
+#         s = np.array(sum_all_data)[:, :].astype('float').sum(axis=0)
+#         all_data = all_data / s * 1000000
+
+    if sample_normalize:
+        print('SAMPLE WISE NORMALIZATION APPLIED!!')
+        for j in range(all_data.shape[1]):
+            s = np.sum(all_data[:, j])
+            if s == 0:
+                s = 0
+#                 print ('normalize sum==0: sample',j)
+            else:
+                all_data[:, j] = all_data[:, j] / s * 1000000
                 
     if log_trans:
+        print('LOG1P NORMALIZATION APPLIED!!')
         all_data = np.log(all_data + 1)
+        
     if gene_normalize:
+        print('GENE WISE NORMALIZATION APPLIED!!')
         for j in range(all_data.shape[0]):
             mean = np.mean(all_data[j, :])
             std = np.std(all_data[j, :])
@@ -181,13 +161,13 @@ def load_integrated_data(
             else:
                 all_data[j, :] = (all_data[j, :] - mean) / std
             # print all_data[j,:]
+            
     labeled_data = np.zeros((all_data.shape[0], len(label_index)), dtype="float32")
     unlabeled_data = np.zeros(
         (all_data.shape[0], len(unlabeled_index)), dtype="float32"
     )
     count = 0
-    print(len(label_index))
-    print(all_data.shape)
+
     for i in label_index:
         labeled_data[:, count] = all_data[:, i]
         count += 1
@@ -206,6 +186,11 @@ def load_integrated_data(
     all_weights = np.transpose(all_weights)
     labeled_weights = np.transpose(labeled_weights)
     unlabeled_weights = np.transpose(unlabeled_weights)
+    
+    print('    Lenght of gene list, ', len(all_data))
+    print('    all_data shape, ', all_data.shape)
+    print('    sum_all_data shape, ', np.asarray(sum_all_data).shape)
+    
 
     return (
         all_data,
@@ -224,7 +209,7 @@ def load_integrated_data(
     )
 
 
-def compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_file, sub_output_dir, out_file):
+def compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_file, sub_output_dir, out_file, gnorm, scaler):
     # nearest neighbor retrieval things
     # data_file_name='hannah_mouse_data/TPM_6_8_9_15_25_41_44_45_46_.txt'
     # model_name='3layer_SN1_GN1_BS32_hls100_mls696_seed0_classifier_merge0_tanh'
@@ -246,13 +231,13 @@ def compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_fil
     ) = load_integrated_data(
         data_file_path,
         sample_normalize=snorm,
-        gene_normalize=0,
+        gene_normalize=gnorm,
         log_trans=0,
         ref_gene_file=ref_gene_file,
     )
-
-    code, time = encode_data(model_path, n_epochs, modality, all_data)
-
+    
+    code, time = encode_data(model_path, n_epochs, modality, all_data, scaler)
+    print(all_data)
     print("all_data.shape: ", all_data.shape)
     # code = get_nn_code(model_name,nn_iteration,all_data)
     # code=transform_data
@@ -412,7 +397,7 @@ def encode_from_saved_model(model, data):
     K.clear_session()
     return code
 
-def encode_pca(data, n_epochs):
+def encode_pca(data, n_epochs, scaler):
     """Encode using l1-driven PCA.
 
     Parameters
@@ -426,8 +411,12 @@ def encode_pca(data, n_epochs):
         Encoded dataframe
     """
 
-    from sklearn.decomposition import PCA
-    from sklearn.cluster import KMeans
+    from sklearn.decomposition import SparsePCA, PCA, FastICA
+    from sklearn.preprocessing import StandardScaler
+    
+    if scaler == True:
+        print('STANDARSCALER APPLIED!!')
+        data = StandardScaler().fit_transform(data)
     
     if n_epochs != "mle":
         n_epochs = int(n_epochs)
@@ -436,37 +425,43 @@ def encode_pca(data, n_epochs):
 
     return code
 
-def encode_data(model_path, n_epochs, modality, data):
+def encode_data(model_path, n_epochs, modality, data, scaler):
     if modality == "saved_model":
 #         print('\nRETRIEVAL ANALYSIS IS PERFORMING for SAVED MODELS in ',model_path)
         code = encode_from_saved_model(model_path, data)
     elif re.search("pca", modality):
         print('\nRETRIEVAL ANALYSIS IS PERFORMING for PCA')
-        code = encode_pca(data, n_epochs, modality)
+        code = encode_pca(data, n_epochs, scaler)
     else:
         raise NotImplementedError("Unknown learning modality.")
         
     return code, dt.datetime.now()
 
 
-def main(model_path, n_epochs, modality, snorm, ref_gene_file, design_name):
+def main(model_path, n_epochs, modality, snorm, ref_gene_file, gnorm, scaler, design_name):
     
     time_start = dt.datetime.now()#.strftime('%d/%m/%y, %H:%M:%S')
     
     experiment_name = 'mouse'
     sub_output_dir='./reports/retrieval/exper_'+experiment_name
+#     print(f'snorm type {type(eval(snorm))}, gnorm type {type(gnorm)}')
+    print(f'snorm --> {snorm}')
+    print(f'gnorm --> {gnorm}')
+    print(f'scaler --> {scaler}')
+#     print(f'bool(snorm) --> {bool(eval(snorm))}')
     
     if not os.path.exists(os.path.join(sub_output_dir)):
         src.define_folder(os.path.join(sub_output_dir))
-    time_encoding = compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_file, sub_output_dir, design_name)
+    
+    time_encoding = compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_file, sub_output_dir, design_name, gnorm, scaler)
     
 
 if __name__ == "__main__":
 #     _, model_path, n_epochs, modality, snorm, ref_gene_file, res_path = sys.argv
-    _, model_path, n_epochs, modality, snorm, ref_gene_file= sys.argv
+    _, model_path, n_epochs, modality, snorm, ref_gene_file, gnorm, scaler, design_name= sys.argv
     
 
 #     main(model_path, n_epochs, modality, snorm, ref_gene_file, res_path)
-    main(model_path, n_epochs, modality, snorm, ref_gene_file)
+    main(model_path, n_epochs, modality, bool(eval(snorm)), ref_gene_file, bool(eval(gnorm)), bool(eval(scaler)), design_name)
     
 
