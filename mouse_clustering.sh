@@ -63,7 +63,7 @@ python notebooks/4.0-pg-model.py \
     -filter_gene_space False
     
 # 1-LAYER SIGNALING + 100dense
-python notebooks/4.0-pg-model_v2.py \
+python notebooks/4.0-pg-model.py \
     -design 1_layer_signaling+100dense \
     -first_hidden_layer_pbk pbk_layer_mmu_sig.txt \
     -first_hidden_layer_dense 100 \
