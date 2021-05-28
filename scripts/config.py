@@ -32,3 +32,4 @@ from scripts.path_scripts import *
 from scripts.visualization_scripts import *
 from scripts.metrics_and_split_scripts import *
 from scripts.scibet_compare import *
+from scripts.autoencoder import *
