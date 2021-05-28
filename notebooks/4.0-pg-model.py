@@ -30,7 +30,7 @@ EXPORTED FILE(s) LOCATION
 '''
 
 SEED = 91 # for reproducible result
-import os, argparse, sys
+import os, argparse, sys, re
 sys.path.append('./')
 # importing scripts in scripts folder
 from scripts import config as src
@@ -82,7 +82,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             split = 'StratifiedKFold'
         elif analysis == 'evaluate_rskf':
             split = 'RepeatedStratifiedKFold'
-        elif analysis == 'retrieval':
+        elif analysis == 'retrieval' or re.search('pca', analysis) or re.search('autoencoder', analysis):
             split = 'None'
         elif analysis == 'performance':
             split = 'train_test_split'
@@ -95,14 +95,15 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
 
 #         defining the location for outputs of results and models
-        if analysis == 'retrieval' or analysis == 'retrieval_lof' or analysis=='encoding':
+        if analysis=='retrieval' or analysis=='encoding' or re.search('autoencoder', analysis): 
             loc_output_models = os.path.join(src.DIR_MODELS, experiment_name, split)
 ####                 ./models/{ANALYSIS}/{EXPERIMENT}/{SPLIT}/{THE_TRAINED_MODEL_for_SELECTED_DESING}.h5
             src.define_folder(loc_=loc_output_models)
     
-        loc_output_reports_analysis = os.path.join(src.DIR_REPORTS, analysis, experiment_name)
-        src.define_folder(loc_=loc_output_reports_analysis)
-####         ./reports/{ANALYSIS}/{EXPERIMENT}/{SPLIT}/{THE_RESULT_or_METRICS_for_SELECTED_DESING}.csv
+        if re.search('pca', analysis)==None and re.search('autoencoder', analysis)==None:
+            loc_output_reports_analysis = os.path.join(src.DIR_REPORTS, analysis, experiment_name)
+            src.define_folder(loc_=loc_output_reports_analysis)
+####                 ./reports/{ANALYSIS}/{EXPERIMENT}/{SPLIT}/{THE_RESULT_or_METRICS_for_SELECTED_DESING}.csv
 
         loc_output_print = os.path.join(src.DIR_NOHUP, experiment_name)
         src.define_folder(loc_=loc_output_print)
@@ -169,6 +170,10 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                                          , left_index=True
                                          , right_index=True
                                          , how='left').fillna(0.0)
+        
+        if re.search('autoencoder', analysis) or re.search('retrieval_pca', analysis): 
+            df_first_hidden_layer = df_dense.copy()
+        
 #         adding information
         export_to_txt.save(text='********** DATAFRAME DETAILS **********')
         export_to_txt.save(text=f'Dataset cell type, {cell_type_info}\nDataset shape, {df.shape}\nhead(5)\n{df.head()}')
@@ -204,81 +209,118 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                                                                                                                               , test_size
                                                                                                                               , export_to_txt
                                                                                                                               , train_test_repeat)
+
+        if re.search('pca', analysis):
+            print('PCA design no model training!!')
         
-#         Model creating and fitting steps
-        for i in range(len(X_train_list)):
-            print(f'{i+1}/{len(X_train_list)} -- {dt.datetime.now().time().strftime("%H:%M:%S")}')
-            export_to_txt.save(text = f'{i+1}/{len(X_train_list)} -- {dt.datetime.now().time().strftime("%H:%M:%S")}')
-            keras.backend.clear_session()
-            model = src.proposed_NN(X=X, y=y
-                            , bio_layer=df_first_hidden_layer
-                            , select_optimizer=optimizer
-                            , select_activation=activation
-                            , second_layer=second_hidden_layer)
-            model.fit(X_train_list[i], y_train_list[i]
-                      , epochs=epochs_default
-                      , batch_size=batch_default
-                      , verbose=1
-                      , callbacks=callbacks
-                      , validation_split=val_split)
-            
-#             obtaining encoding part from model
-            model_encoding = tf.keras.models.Model(inputs=model.layers[0].input
-                                                   , outputs=model.layers[-1].input)
-            
-            
-#             Saving fitted model
-            if analysis == 'retrieval' or analysis == 'retrieval_lof' or analysis == 'encoding':
-                export_to_txt.save(text='********** MODEL IS SAVING **********')
-                export_to_txt.save(text=f'Model is saving for split --> {split} !!')
-                model.save(os.path.join(loc_output_models, f'design_{design_name}_{dataset_name}_{optimizer}_{activation}_{i}.h5'))
-                export_to_txt.save(text=f"{os.path.join(loc_output_models, f'design_{design_name}_{dataset_name}_{optimizer}_{activation}_{i}.h5')}")
+        else:
+        
+#             Model creating and fitting steps
+            for i in range(len(X_train_list)):
+                print(f'{i+1}/{len(X_train_list)} -- {dt.datetime.now().time().strftime("%H:%M:%S")}')
+                export_to_txt.save(text = f'{i+1}/{len(X_train_list)} -- {dt.datetime.now().time().strftime("%H:%M:%S")}')
+                keras.backend.clear_session()
 
-                if analysis == 'encoding':
-                    export_to_txt.save(text='********** ENCODING IS SAVING **********')
-                    export_to_txt.save(text=f'Model(encoding) is saving for split --> {split} !!')
-                    model_encoding.save(os.path.join(loc_output_models, f'encoding_{design_name}_{dataset_name}_{optimizer}_{activation}.h5'))
-                    export_to_txt.save(text=f"{os.path.join(loc_output_models, f'encoding_{design_name}_{dataset_name}_{optimizer}_{activation}.h5')}")
-                
+                if re.search('autoencoder', analysis):
+                    print('AUTOENCODER MODEL IS EXECUTING....')
+                    noise = list(np.random.normal(loc=0, scale=0.1, size=X.shape[1]))
+                    train_data = X_train_list[i]
+                    train_data_with_noise = train_data + noise
 
-            else: 
-#                 clustering analysis executing
-                if analysis == 'clustering':
-#                     getting encoding part for testing sample
-                    encoding_testing = model_encoding.predict(X_test_list[i])
-#                     clustering prediction
-                    kmeans = KMeans(n_clusters=co_list[i], random_state=SEED).fit(encoding_testing)
-                    y_pred = kmeans.predict(encoding_testing)
+#                     train_data = train_data.astype('float64').flatten()
+#                     train_data_with_noise = train_data_with_noise.flatten()
+#                     .reshape(-1, 1)
 
-                    df_split = pd.DataFrame(y_pred, columns=['prediction'])
-                    df_split['ground_truth'] = y_test_list[i].values
-                    df_split['cell_out']='cell_out_'+str(co_list[i])
+#                     train_data = np.clip(train_data,-1.,1.)
+#                     train_data_with_noise = np.clip(train_data_with_noise,-1.,1.)
+
+                    model = src.autoencoder_one_hidden_layer(X=train_data
+                                                             , bio_layer=df_first_hidden_layer
+                                                             , select_optimizer=optimizer
+                                                             , select_activation=activation)
+                    print(model.summary())
+
+                    print('AUTOENCODER MODEL IS CREATED!!')
+                    model.fit(train_data, train_data_with_noise
+                              , epochs=epochs_default
+                              , batch_size=batch_default
+                              , verbose=1
+                             )
+                    print('AUTOENCODER MODEL IS FITTED!!')
 
                 else:
-#                     model cell type prediction
-                    y_pred = model.predict(X_test_list[i])
-#                     df_split = src.generate_pred_result(y_pred, y_test_list[i], ohe)
-                    df_split = pd.DataFrame(y_pred, columns=list(pd.DataFrame(ohe.categories_).iloc[0,:]))
-                    df_split['prediction'] = ohe.inverse_transform(y_pred).reshape(1, -1)[0]
-                    df_split['ground_truth'] = ohe.inverse_transform(y_test_list[i]).reshape(1, -1)[0]
+                    print('PROPOSED MODEL IS EXECUTING....')
+                    model = src.proposed_NN(X=X, y=y
+                                    , bio_layer=df_first_hidden_layer
+                                    , select_optimizer=optimizer
+                                    , select_activation=activation
+                                    , second_layer=second_hidden_layer)
 
-                df_split['index_split'] = str(split_index_list[i])
-                df_split['design']=design_name
-                df_result = pd.concat([df_result, df_split])
+                    model.fit(X_train_list[i], y_train_list[i]
+                              , epochs=epochs_default
+                              , batch_size=batch_default
+                              , verbose=1
+                              , callbacks=callbacks
+                              , validation_split=val_split)
 
-#         exporting model summary into txt file(for information purpose)
-        stringlist = []
-        if analysis=='encoding' or analysis=='clustering':
-            model_encoding.summary(print_fn=lambda x: stringlist.append(x))
-            text_summary = 'Model(encoding) summary ;'
-        else:
-            model.summary(print_fn=lambda x: stringlist.append(x))
-            text_summary = 'Model summary ;'
-        
-        short_model_summary = '\n'.join(stringlist)
-        export_to_txt.save(text=f'********** MODEL DETAILS ********** \n\n{text_summary} {short_model_summary}')
-        print(f'********** MODEL DETAILS ********** \n\n{text_summary} {short_model_summary}')
+    #             obtaining encoding part from model
+                model_encoding = tf.keras.models.Model(inputs=model.layers[0].input
+                                                       , outputs=model.layers[-1].input)
 
+
+    #             Saving fitted model
+                if re.search('retrieval', analysis) or analysis == 'encoding' or re.search('autoencoder', analysis): 
+                    export_to_txt.save(text='********** MODEL IS SAVING **********')
+                    export_to_txt.save(text=f'Model is saving for split --> {split} !!')
+                    model.save(os.path.join(loc_output_models, f'design_{design_name}_{dataset_name}_{optimizer}_{activation}_{i}.h5'))
+                    export_to_txt.save(text=f"{os.path.join(loc_output_models, f'design_{design_name}_{dataset_name}_{optimizer}_{activation}_{i}.h5')}")
+
+                    if analysis == 'encoding':
+                        print('model_encoding2')
+                        export_to_txt.save(text='********** ENCODING IS SAVING **********')
+                        export_to_txt.save(text=f'Model(encoding) is saving for split --> {split} !!')
+                        model_encoding.save(os.path.join(loc_output_models, f'encoding_{design_name}_{dataset_name}_{optimizer}_{activation}.h5'))
+                        export_to_txt.save(text=f"{os.path.join(loc_output_models, f'encoding_{design_name}_{dataset_name}_{optimizer}_{activation}.h5')}")
+
+                else: 
+    #                 clustering analysis executing
+                    if analysis == 'clustering':
+    #                     getting encoding part for testing sample
+                        encoding_testing = model_encoding.predict(X_test_list[i])
+    #                     clustering prediction
+                        kmeans = KMeans(n_clusters=co_list[i], random_state=SEED).fit(encoding_testing)
+                        y_pred = kmeans.predict(encoding_testing)
+
+                        df_split = pd.DataFrame(y_pred, columns=['prediction'])
+                        df_split['ground_truth'] = y_test_list[i].values
+                        df_split['cell_out']='cell_out_'+str(co_list[i])
+
+                    else:
+    #                     model cell type prediction
+                        y_pred = model.predict(X_test_list[i])
+    #                     df_split = src.generate_pred_result(y_pred, y_test_list[i], ohe)
+                        df_split = pd.DataFrame(y_pred, columns=list(pd.DataFrame(ohe.categories_).iloc[0,:]))
+                        df_split['prediction'] = ohe.inverse_transform(y_pred).reshape(1, -1)[0]
+                        df_split['ground_truth'] = ohe.inverse_transform(y_test_list[i]).reshape(1, -1)[0]
+
+                    df_split['index_split'] = str(split_index_list[i])
+                    df_split['design']=design_name
+                    df_result = pd.concat([df_result, df_split])
+
+    #         exporting model summary into txt file(for information purpose)
+            stringlist = []
+            if analysis=='encoding' or analysis=='clustering':
+                model_encoding.summary(print_fn=lambda x: stringlist.append(x))
+                text_summary = 'Model(encoding) summary ;'
+            else:
+                model.summary(print_fn=lambda x: stringlist.append(x))
+                text_summary = 'Model summary ;'
+
+            short_model_summary = '\n'.join(stringlist)
+            export_to_txt.save(text=f'********** MODEL DETAILS ********** \n\n{text_summary} {short_model_summary}')
+            print(f'********** MODEL DETAILS ********** \n\n{text_summary} {short_model_summary}')
+
+            
 #         exporting the result for all iterations
         if len(df_result) > 0:
             df_result.to_csv(os.path.join(loc_output_reports_analysis,f'detail_{design_name}_{dataset_name}_{optimizer}_{activation}.csv'), index=False)
@@ -297,6 +339,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             export_to_txt.save(text=f'clustering metrics saved into {loc_output_reports_analysis}')
             print(f'clustering metrics saved into {loc_output_reports_analysis}')
             
+#         performance metric scores
         if analysis =='evaluate_skf' or analysis=='evaluate_rskf' or analysis=='performance':
             df_metric_overall = src.calculate_f1_recall_precision_metrics_overall(df_result)
             df_metric_overall['design'] = design_name
@@ -307,11 +350,13 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             export_to_txt.save(text=f'F1-precision-recall metrics saved into {loc_output_reports_analysis}')
             print(f'F1-precision-recall metrics saved into {loc_output_reports_analysis}')
 
-    
-        if analysis == 'retrieval':
-            print('RETRIEVAL ANALYSIS -- notebook 4.0')
+#         retrieval analysis
+        if analysis == 'retrieval' or re.search('autoencoder', analysis):
             print(model_encoding.summary())
-            retrieval.main(model_encoding, 0, 'saved_model', 1, 'all', 1, 0, design_name)
+            retrieval.main(model_encoding, 0, analysis, 1, 'all', 1, 0, design_name, None)
+            
+        if re.search('pca', analysis) :
+            retrieval.main(None, df_first_hidden_layer.shape[1], analysis, 1, 'all', 1, 0, design_name, X)
 
         time_end = dt.datetime.now().time().strftime('%H:%M:%S')
         export_to_txt.save(text=f'Script execution finish time, {time_end}')
@@ -319,8 +364,19 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         cuda.select_device(0)
         cuda.close()
         
+    except ValueError as e:
+        print(e)
+        
+    except UnboundLocalError as e:
+        print(e)
+        
+    except TypeError as e:
+        print(e)
+        
     except:
         print("Unexpected error:", sys.exc_info()[0])
+        
+    
             
 if __name__=='__main__':
     
