@@ -28,7 +28,7 @@ from scipy.spatial import distance
 
 important_folder=os.path.abspath('./data/external/exper_mouse/')
 print('IMPORTANT FOLDER, ',important_folder)
-data_file_name = "3-33_integrated_retrieval_set.txt"
+# data_file_name = "3-33_integrated_retrieval_set.txt"
 # data_file_name = "TPM_mouse_7_8_10_PPITF_gene_9437.txt"
 
 retrieval_topcell = 100
@@ -37,8 +37,8 @@ retrieval_map = 1
 project_dir = os.path.abspath(dotenv.find_dotenv())
 project_dir = os.path.dirname(project_dir)
 data_dir = os.path.join(project_dir, "data")
-data_file_path = os.path.join(important_folder, data_file_name)
-print('\nFILE for USING RETRIEVAL ANALYSIS IS ',data_file_path)
+# data_file_path = os.path.join(important_folder, data_file_name)
+# print('\nFILE for USING RETRIEVAL ANALYSIS IS ',data_file_path)
 
 def AvgPrecision(ans, pred):
     # ans is a single integer denoting the class
@@ -209,11 +209,12 @@ def load_integrated_data(
     )
 
 
-def compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_file, sub_output_dir, out_file, gnorm, scaler):
+def compute_retrieval_scores(model_path, n_epochs, analysis, snorm, ref_gene_file, sub_output_dir, out_file, gnorm, scaler, data_file_path, data_training):
     # nearest neighbor retrieval things
     # data_file_name='hannah_mouse_data/TPM_6_8_9_15_25_41_44_45_46_.txt'
     # model_name='3layer_SN1_GN1_BS32_hls100_mls696_seed0_classifier_merge0_tanh'
     # nn_iteration=100
+    print('compute_retrieval_scores ----->', data_file_path)
     (
         all_data,
         labeled_data,
@@ -236,7 +237,7 @@ def compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_fil
         ref_gene_file=ref_gene_file,
     )
     
-    code, time = encode_data(model_path, n_epochs, modality, all_data, scaler)
+    code, time = encode_data(model_path, n_epochs, analysis, all_data, scaler, data_training)
     print(all_data)
     print("all_data.shape: ", all_data.shape)
     # code = get_nn_code(model_name,nn_iteration,all_data)
@@ -397,7 +398,7 @@ def encode_from_saved_model(model, data):
     K.clear_session()
     return code
 
-def encode_pca(data, n_epochs, scaler):
+def encode_pca(data, n_epochs, scaler, analysis, data_training):
     """Encode using l1-driven PCA.
 
     Parameters
@@ -418,50 +419,70 @@ def encode_pca(data, n_epochs, scaler):
         print('STANDARSCALER APPLIED!!')
         data = StandardScaler().fit_transform(data)
     
-    if n_epochs != "mle":
-        n_epochs = int(n_epochs)
-
-    code = PCA(n_components=n_epochs).fit_transform(data)
-
+    pca = PCA(n_components=n_epochs)
+    
+    if re.search('pretrained', analysis)==None:
+        print('PCA-ML applied!!')
+        code = pca.fit_transform(data)
+    else:
+        print('PCA-pretrained!!')
+        print('PCA fitted with training dataset and .transform for retrieval dataset!!')
+        pca.fit(data_training)
+        code = pca.transform(data)
     return code
 
-def encode_data(model_path, n_epochs, modality, data, scaler):
-    if modality == "saved_model":
-#         print('\nRETRIEVAL ANALYSIS IS PERFORMING for SAVED MODELS in ',model_path)
-        code = encode_from_saved_model(model_path, data)
-    elif re.search("pca", modality):
+
+def encode_data(model_path, n_epochs, analysis, data, scaler, data_training):
+    if re.search('pca', analysis):
         print('\nRETRIEVAL ANALYSIS IS PERFORMING for PCA')
-        code = encode_pca(data, n_epochs, scaler)
+        code = encode_pca(data, n_epochs, scaler, analysis, data_training)
     else:
-        raise NotImplementedError("Unknown learning modality.")
-        
+        code = encode_from_saved_model(model_path, data)
+
     return code, dt.datetime.now()
 
 
-def main(model_path, n_epochs, modality, snorm, ref_gene_file, gnorm, scaler, design_name):
-    
-    time_start = dt.datetime.now()#.strftime('%d/%m/%y, %H:%M:%S')
-    
-    experiment_name = 'mouse'
-    sub_output_dir='./reports/retrieval/exper_'+experiment_name
-#     print(f'snorm type {type(eval(snorm))}, gnorm type {type(gnorm)}')
-    print(f'snorm --> {snorm}')
-    print(f'gnorm --> {gnorm}')
-    print(f'scaler --> {scaler}')
-#     print(f'bool(snorm) --> {bool(eval(snorm))}')
-    
-    if not os.path.exists(os.path.join(sub_output_dir)):
-        src.define_folder(os.path.join(sub_output_dir))
-    
-    time_encoding = compute_retrieval_scores(model_path, n_epochs, modality, snorm, ref_gene_file, sub_output_dir, design_name, gnorm, scaler)
-    
+def main(model_path, n_epochs, analysis, snorm, ref_gene_file, gnorm, scaler, design_name, data_training):
 
+    try:
+        print(f'model_path, {model_path}\nn_epoch, {n_epochs}\nanalysis, {analysis}\nsnorm, {snorm}\nref_gene_file, {ref_gene_file}\ngnorm, {gnorm}\nscaler, {scaler}\ndesign_name, {design_name}')
+#         \ndata_training, {data_training.shape}
+        
+        time_start = dt.datetime.now()#.strftime('%d/%m/%y, %H:%M:%S')
+
+        if re.search('signaling', analysis):
+            data_file_name = "3-33_integrated_retrieval_set_signaling.txt"
+        elif re.search('metsig', analysis):
+            data_file_name = "3-33_integrated_retrieval_set_metsig.txt"
+        else:
+            data_file_name = "3-33_integrated_retrieval_set.txt"
+
+        print(data_file_name)
+        data_file_path = os.path.join(important_folder, data_file_name)
+        print('\nFILE for USING RETRIEVAL ANALYSIS IS ',data_file_path)
+
+        experiment_name = 'mouse'
+        sub_output_dir=f'./reports/retrieval/exper_'+experiment_name
+    #     print(f'snorm type {type(eval(snorm))}, gnorm type {type(gnorm)}')
+        print(f'snorm --> {snorm}')
+        print(f'gnorm --> {gnorm}')
+        print(f'scaler --> {scaler}')
+    #     print(f'bool(snorm) --> {bool(eval(snorm))}')
+
+        if not os.path.exists(os.path.join(sub_output_dir)):
+            src.define_folder(os.path.join(sub_output_dir))
+
+        time_encoding = compute_retrieval_scores(model_path, n_epochs, analysis, snorm, ref_gene_file, sub_output_dir, design_name, gnorm, scaler, data_file_path, data_training)
+
+    except NameError as e:
+        print(e)
+        
+    except TypeError as e:
+        print(e)
+        
 if __name__ == "__main__":
-#     _, model_path, n_epochs, modality, snorm, ref_gene_file, res_path = sys.argv
-    _, model_path, n_epochs, modality, snorm, ref_gene_file, gnorm, scaler, design_name= sys.argv
-    
+    _, model_path, n_epochs, analysis, snorm, ref_gene_file, gnorm, scaler, design_name, data_training= sys.argv
 
-#     main(model_path, n_epochs, modality, snorm, ref_gene_file, res_path)
-    main(model_path, n_epochs, modality, bool(eval(snorm)), ref_gene_file, bool(eval(gnorm)), bool(eval(scaler)), design_name)
+    main(model_path, n_epochs, analysis, bool(eval(snorm)), ref_gene_file, bool(eval(gnorm)), bool(eval(scaler)), design_name, data_training)
     
 
