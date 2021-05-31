@@ -171,7 +171,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                                          , right_index=True
                                          , how='left').fillna(0.0)
         
-        if re.search('autoencoder', analysis) or re.search('retrieval_pca', analysis): 
+        if re.search('autoencoder', analysis) or re.search('pca', analysis): 
             df_first_hidden_layer = df_dense.copy()
         
 #         adding information
@@ -226,10 +226,6 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                     noise = list(np.random.normal(loc=0, scale=0.1, size=X.shape[1]))
                     train_data = X_train_list[i]
                     train_data_with_noise = train_data + noise
-
-#                     train_data = train_data.astype('float64').flatten()
-#                     train_data_with_noise = train_data_with_noise.flatten()
-#                     .reshape(-1, 1)
 
 #                     train_data = np.clip(train_data,-1.,1.)
 #                     train_data_with_noise = np.clip(train_data_with_noise,-1.,1.)
@@ -351,7 +347,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             print(f'F1-precision-recall metrics saved into {loc_output_reports_analysis}')
 
 #         retrieval analysis
-        if analysis == 'retrieval' or re.search('autoencoder', analysis):
+        if re.search('autoencoder', analysis):
             print(model_encoding.summary())
             retrieval.main(model_encoding, 0, analysis, 1, 'all', 1, 0, design_name, None)
             
