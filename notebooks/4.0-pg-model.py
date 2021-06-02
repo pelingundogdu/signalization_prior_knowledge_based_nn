@@ -16,6 +16,7 @@ USAGE
                                                               -ds                       {DATASET PATH}
                                                               -analysis                 {THE NAME of ANALYSIS}
                                                               -filtering_gene_space     {GENE SPACE FILTERING}
+                                                              -hp_tuning                {HYPERPARAMETER TUNING}
 RETURN
 ------
     {MODEL}.h5 : h5 file
@@ -51,10 +52,11 @@ from sklearn.cluster import KMeans
 
 from numba import cuda
 from tensorflow import keras
+import kerastuner as kt # for hypermodel
 
 pd.set_option('display.max_columns', 7)
 
-def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_layer, optimizer, activation, dataset_path, analysis, filtering_gene_space):
+def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_layer, optimizer, activation, dataset_path, analysis, filtering_gene_space, hp_tuning):
     try:
         # VALUES for split operation
         test_size = 0.2            # For train_test_split, the size of testing sample
@@ -67,6 +69,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         epochs_default = 100       # the number of epoch
         batch_default = 10         # the size of batch
         val_split = 0.1            # the percentage of validation split
+        HYPERBAND_MAX_EPOCHS = 100
         
         df_result = pd.DataFrame() # the metric scores for given analysis
         how_join='left' # if the network needs to filter the gene space this features updating in below
@@ -96,7 +99,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
 
 #         defining the location for outputs of results and models
         if analysis=='retrieval' or analysis=='encoding' or re.search('autoencoder', analysis): 
-            loc_output_models = os.path.join(src.DIR_MODELS, experiment_name, split)
+            loc_output_models = os.path.join(src.DIR_MODELS, experiment_name, f'{split}_hptuner_{hp_tuning}')
 ####                 ./models/{ANALYSIS}/{EXPERIMENT}/{SPLIT}/{THE_TRAINED_MODEL_for_SELECTED_DESING}.h5
             src.define_folder(loc_=loc_output_models)
     
@@ -119,7 +122,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
 #         adding information
         export_to_txt.save(text=f'Script execution start time, {time_start}', file_operation=file_operation)
         export_to_txt.save(text='****SCRIPT INFORMATION****')
-        export_to_txt.save(text=f'design_name: {design_name}\n bio_knowledge: {bio_knowledge}\n dense_nodes: {dense_nodes}\n second_hidden_layer: {second_hidden_layer}\n optimizer: {optimizer}\n dataset: {dataset_name}\n split: {split}\n filter_gene_space: {filtering_gene_space}')
+        export_to_txt.save(text=f'design_name: {design_name}\n bio_knowledge: {bio_knowledge}\n dense_nodes: {dense_nodes}\n second_hidden_layer: {second_hidden_layer}\n optimizer: {optimizer}\n dataset: {dataset_name}\n split: {split}\n filter_gene_space: {filtering_gene_space}\nhp_tuning: {hp_tuning}')
 
         if filtering_gene_space==True and bio_knowledge!=None:
             export_to_txt.save(text='INFO, Design is fully connected. Not filtered the gene space, all the genes are using!!')
@@ -251,6 +254,38 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                                     , select_optimizer=optimizer
                                     , select_activation=activation
                                     , second_layer=second_hidden_layer)
+                    
+                    if hp_tuning == True:
+                        export_to_txt.save(text='Hyperparameter tuning is executing..')
+                        print('HYPERPARAMETER TUNING IS EXECUTING....')
+                        
+                        model_tuner = src.tuning(X=X, y=y
+                                    , bio_layer=df_first_hidden_layer
+                                    , select_optimizer=optimizer
+                                    , select_activation=activation
+                                    , second_layer=second_hidden_layer)
+                        
+                        tuner = kt.Hyperband(model_tuner
+                                             , objective = 'val_accuracy'
+                                             , max_epochs = HYPERBAND_MAX_EPOCHS
+                                             , overwrite = True
+                                             , directory = 'kt_dir'
+                                             , project_name = 'hp_tuning'
+                                            )
+
+                        tuner.search(X_train_list[i]
+                                     , y_train_list[i]
+                                     , epochs=epochs_default
+                                     , validation_split=val_split*2
+                                     , callbacks = callbacks
+                                     , verbose=0)
+                        
+
+                        # Get the optimal hyperparameters
+                        best_hps = tuner.get_best_hyperparameters(num_trials = 1)[0]
+                        export_to_txt.save(text=f'The best hyperparameters are {best_hps.values}')
+                        print(best_hps.values)
+                        model = tuner.hypermodel.build(best_hps)
 
                     model.fit(X_train_list[i], y_train_list[i]
                               , epochs=epochs_default
@@ -347,7 +382,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             print(f'F1-precision-recall metrics saved into {loc_output_reports_analysis}')
 
 #         retrieval analysis
-        if re.search('autoencoder', analysis):
+        if re.search('autoencoder', analysis) or analysis=='retrieval':
             print(model_encoding.summary())
             retrieval.main(model_encoding, 0, analysis, 1, 'all', 1, 0, design_name, None)
             
@@ -386,7 +421,7 @@ if __name__=='__main__':
     parser.add_argument('-ds'                      , '--dataset_path', help='the path of dataset')
     parser.add_argument('-analysis'                , '--analysis', help='the name of the analysis')
     parser.add_argument('-filter_gene_space'       , '--filter_space', help='filtering gene space with given bio knowledge set')
-    
+    parser.add_argument('-hp_tuning'               , '--hp_tuning', help='Keras Tuner hyperparameter optimization')
     
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -402,5 +437,6 @@ if __name__=='__main__':
                         , args.dataset_path
                         , args.analysis
                         , eval(args.filter_space)
+                        , eval(args.hp_tuning)
                         )
     
