@@ -182,6 +182,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         export_to_txt.save(text=f'Dataset cell type, {cell_type_info}\nDataset shape, {df.shape}\nhead(5)\n{df.head()}')
         export_to_txt.save(text='********** FIRST HIDDEN LAYER DETAILS **********')
         export_to_txt.save(text=f'First hidden layer shape, {df_first_hidden_layer.shape}\nhead(5)\n{df_first_hidden_layer.head()}')
+        export_to_txt.save(text=f'First hidden layer sum {df_first_hidden_layer.sum().sum()}')
 
 #         Defining feature and target columns
         ohe = OneHotEncoder()
