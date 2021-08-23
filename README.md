@@ -1,8 +1,4 @@
 
-https://trello.com/b/ivgekKYB/draft
-------------
-
-
 Project Organization
 ------------
 
