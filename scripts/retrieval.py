@@ -391,7 +391,7 @@ def encode_from_saved_model(model, data):
     import tensorflow.keras.backend as K
 
     K.clear_session()
-    
+    print('retireval saved model !!')
     print(model.summary())
     code=model.predict(data)
     

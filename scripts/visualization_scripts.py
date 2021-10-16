@@ -25,7 +25,7 @@ plt.rc('legend', title_fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
-def heatmap_cv(dataframe_crosstab, title):
+def heatmap_cv(dataframe_crosstab, title, fmt='.3f'):
     '''
     Visualization of heatmap for giving pandas.crosstab(ground_truth, pred_label)
     Parameters
@@ -61,7 +61,7 @@ def heatmap_cv(dataframe_crosstab, title):
     mpl.pyplot.figure(figsize=(12,6))
     g = sns.heatmap(dataframe_crosstab
                     , cmap=cmap#flatui[::-1]
-                    , annot=True, fmt='.3f'
+                    , annot=True, fmt=fmt
                     , linewidths=0.1
                     , linecolor='white');
 #     g = sns.heatmap(dataframe_crosstab, cmap=cmap, annot=True, fmt='.2f');
@@ -94,7 +94,7 @@ def plot_expression_and_sum(df, title, random_genes, png=None, output=None):
         plt.savefig(os.path.join(output, png), dpi=300, bbox_inches = 'tight');
         print('EXPORTED!!, ', os.path.join(output, png))
     
-def scibet_confusion_matrix(dataframe):
+def get_confusion_matrix(dataframe):
     cmap = mpl.cm.Blues(np.linspace(0,1,350))
     cmap = mpl.colors.ListedColormap(cmap[10:,:-1])
 
