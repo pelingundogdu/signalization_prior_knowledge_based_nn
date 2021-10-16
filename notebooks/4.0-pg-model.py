@@ -59,7 +59,7 @@ pd.set_option('display.max_columns', 7)
 def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_layer, optimizer, activation, dataset_path, analysis, filtering_gene_space, hp_tuning):
     try:
         # VALUES for split operation
-        test_size = 0.2            # For train_test_split, the size of testing sample
+        test_size = 0.3            # For train_test_split, the size of testing sample
         n_p_leave_out = [2,4,6,8]  # For LeavePGroupsOut split, the celltype number which will randomly leave out from dataset  # [2,4,6,8]
         p_out_iteration = 20       # For LeavePGroupsOut split, the iteration number for randomly leaving-out cell types        # 20
         stratified_split = 10      # For StratifiedKFold and RepeatedStratifiedKFold, the split number                          # 10
@@ -85,7 +85,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             split = 'StratifiedKFold'
         elif analysis == 'evaluate_rskf':
             split = 'RepeatedStratifiedKFold'
-        elif analysis == 'retrieval' or re.search('pca', analysis) or re.search('autoencoder', analysis):
+        elif analysis == 'None' or analysis == 'retrieval' or re.search('pca', analysis) or re.search('autoencoder', analysis):
             split = 'None'
         elif analysis == 'performance':
             split = 'train_test_split'
@@ -98,8 +98,8 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
 
 #         defining the location for outputs of results and models
-        if analysis=='retrieval' or analysis=='encoding' or re.search('autoencoder', analysis): 
-            loc_output_models = os.path.join(src.DIR_MODELS, experiment_name, f'{split}_hptuner_{hp_tuning}')
+        if analysis=='None' or re.search('retrieval', analysis) or analysis=='encoding' or re.search('autoencoder', analysis): 
+            loc_output_models = os.path.join(src.DIR_MODELS, experiment_name, f'{split}_tuning{hp_tuning}_filtergene{filtering_gene_space}')
 ####                 ./models/{ANALYSIS}/{EXPERIMENT}/{SPLIT}/{THE_TRAINED_MODEL_for_SELECTED_DESING}.h5
             src.define_folder(loc_=loc_output_models)
     
@@ -122,15 +122,14 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
 #         adding information
         export_to_txt.save(text=f'Script execution start time, {time_start}', file_operation=file_operation)
         export_to_txt.save(text='****SCRIPT INFORMATION****')
-        export_to_txt.save(text=f'design_name: {design_name}\n bio_knowledge: {bio_knowledge}\n dense_nodes: {dense_nodes}\n second_hidden_layer: {second_hidden_layer}\n optimizer: {optimizer}\n dataset: {dataset_name}\n split: {split}\n filter_gene_space: {filtering_gene_space}\nhp_tuning: {hp_tuning}')
+        export_to_txt.save(text=f' design_name: {design_name}\n bio_knowledge: {bio_knowledge}\n dense_nodes: {dense_nodes}\n second_hidden_layer: {second_hidden_layer}\n optimizer: {optimizer}\n dataset: {dataset_name}\n split: {split}\n filter_gene_space: {filtering_gene_space}\n hp_tuning: {hp_tuning}')
 
-        if filtering_gene_space==True and bio_knowledge!=None:
+        if filtering_gene_space==False and bio_knowledge!=None:
             export_to_txt.save(text='INFO, Design is fully connected. Not filtered the gene space, all the genes are using!!')
 
 #         Reading dataset
         df = pd.read_pickle(os.path.join(src.DIR_DATA, dataset_path))  
         cell_type_info = df.groupby('cell_type').size().index.values
-
 #         Creating dense layer in regards to given number of nodes via dense_nodes. If there is no included
 #         dense layer, then an empty dataframe is creating.
         if  dense_nodes == 0:
@@ -152,11 +151,12 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
             
             if  filtering_gene_space==True:
                 export_to_txt.save(text='***** GENE SPACE FILTERED!!')
-                how_join = 'right'
+                how_join = 'left'
                 gene_space = list()
                 gene_space.append('cell_type')
                 gene_space.extend(df_bio.index)
-                print(gene_space[:10])
+#                 export_to_txt.save(f'gene_space[:10], {gene_space[:10]}')
+#                 export_to_txt.save(f'gene_space[-10:], {gene_space[-10:]}')
                 df = df.iloc[:, df.columns.isin(gene_space)]
                 df_bio = df_bio.iloc[df_bio.index.isin(df.columns), :]
 
@@ -179,11 +179,12 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         
 #         adding information
         export_to_txt.save(text='********** DATAFRAME DETAILS **********')
-        export_to_txt.save(text=f'Dataset cell type, {cell_type_info}\nDataset shape, {df.shape}\nhead(5)\n{df.head()}')
+        export_to_txt.save(text=f'Dataset cell type, {cell_type_info}\nDataset shape,{df.shape}\nhead(5)\n{df.head().iloc[:,:6]}\nhead(5)\n{df.head(5).iloc[:,-7:]}')
         export_to_txt.save(text='********** FIRST HIDDEN LAYER DETAILS **********')
-        export_to_txt.save(text=f'First hidden layer shape, {df_first_hidden_layer.shape}\nhead(5)\n{df_first_hidden_layer.head()}')
+        export_to_txt.save(text=f'First hidden layer shape, {df_first_hidden_layer.shape}\nhead(10)\n{df_first_hidden_layer.head(5)}\ntail(10)\n{df_first_hidden_layer.tail(5)}')
+        export_to_txt.save(text=f'First hidden layer sum (axis=1) {df_first_hidden_layer.sum(axis=1)}')
         export_to_txt.save(text=f'First hidden layer sum {df_first_hidden_layer.sum().sum()}')
-
+        
 #         Defining feature and target columns
         ohe = OneHotEncoder()
         X = df.iloc[:, :-1].values
@@ -213,7 +214,6 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                                                                                                                               , test_size
                                                                                                                               , export_to_txt
                                                                                                                               , train_test_repeat)
-
         if re.search('pca', analysis):
             print('PCA design no model training!!')
         
@@ -269,15 +269,18 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                         tuner = kt.Hyperband(model_tuner
                                              , objective = 'val_accuracy'
                                              , max_epochs = HYPERBAND_MAX_EPOCHS
-                                             , overwrite = True
+                                             , overwrite = True #False
                                              , directory = 'kt_dir'
                                              , project_name = 'hp_tuning'
+                                             , seed = SEED
+#                                              , executions_per_trial = 1
                                             )
 
                         tuner.search(X_train_list[i]
                                      , y_train_list[i]
                                      , epochs=epochs_default
-                                     , validation_split=val_split*2
+                                     , batch_size=batch_default
+                                     , validation_split=val_split
                                      , callbacks = callbacks
                                      , verbose=0)
                         
@@ -301,7 +304,7 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
 
 
     #             Saving fitted model
-                if re.search('retrieval', analysis) or analysis == 'encoding' or re.search('autoencoder', analysis): 
+                if re.search('retrieval', analysis) or analysis == 'encoding' or re.search('autoencoder', analysis) or analysis == 'None':
                     export_to_txt.save(text='********** MODEL IS SAVING **********')
                     export_to_txt.save(text=f'Model is saving for split --> {split} !!')
                     model.save(os.path.join(loc_output_models, f'design_{design_name}_{dataset_name}_{optimizer}_{activation}_{i}.h5'))
