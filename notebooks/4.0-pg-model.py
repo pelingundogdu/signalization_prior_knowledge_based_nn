@@ -193,6 +193,17 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
         y_ohe = ohe.fit_transform(y).toarray()
         groups = df.iloc[:, -1].values
         
+        class_id, class_weight_score = np.unique(groups, return_counts=True)
+#         print(f'class_id --> {class_id}')
+#         print(f'class_weight_score - keras --> {1 / class_weight_score}')
+        class_weight = dict()
+        
+        for i in range(len(class_id)):
+            class_weight.update({i : 1/class_weight_score[i]})
+
+        print(f'class_weight --> {class_weight}')
+        export_to_txt.save(text=f'class_weight --> {class_weight}')
+        
 #         adding information
         export_to_txt.save(text='********** FEATURE and TARGET COLUMNS **********')
         export_to_txt.save(text=f'X shape, {X.shape}\ny shape, {y.shape}')
@@ -296,7 +307,8 @@ def NN_training_testing(design_name, bio_knowledge, dense_nodes, second_hidden_l
                               , batch_size=batch_default
                               , verbose=1
                               , callbacks=callbacks
-                              , validation_split=val_split)
+                              , validation_split=val_split
+                              , class_weight=class_weight ) # added class_weight
 
     #             obtaining encoding part from model
                 model_encoding = tf.keras.models.Model(inputs=model.layers[0].input
