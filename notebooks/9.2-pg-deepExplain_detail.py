@@ -8,7 +8,7 @@ sys.path.append(ROOT_DIR)
 # from scripts import config as src
 import pandas as pd
 import numpy as np
-
+from scipy.stats import rankdata
 import seaborn as sns
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -93,17 +93,28 @@ for experiment_index in range(0,100):
 
         #     iterating the filtering mask for each node in the biological layer which defined as T
             for i_circuit in range(T.shape[1]):
+                node_name = df_pbk_final.columns[i_circuit]
+                print(i_circuit, node_name)
                 if i_circuit % 500 == 0:
                     print(i_circuit)
         #         filtering the target node in target layer with assigning value as 1
                 mask_ys[:, i_circuit] = 1.0
         #         compute attributions of each genes ('X') for each sample defined as 'xs' with defined mask 'T * mask_ys'
                 explain = de.explain(method_name, T * mask_ys, X, xs)
+            
         #         concat cell type with explain matrix
                 df_explain = pd.concat([pd.DataFrame(explain, columns=df.columns[:-1]), pd.DataFrame(y_data, columns=['cell_type']) ], axis=1)
-                df_explain.to_csv(f'./reports/deepexplain/sample_details_new/{experiment}/{model_detail}_{method_name}_{experiment_index}_{df_pbk_final.columns[i_circuit]}.csv.gzip'
-                                 , compression='gzip')
-
+        #         The mean score of each cell type
+                df_explain_cell_type_mean = df_explain.groupby('cell_type').mean()
+        #         Converting dataframe  updating index and column value with cell type and gene names, respectively, 
+                df_explain_rankdata = pd.DataFrame(rankdata(df_explain_cell_type_mean, axis=1, method="min").astype('float32')
+                                   , columns=df_explain_cell_type_mean.columns
+                                   , index=df_explain_cell_type_mean.index)
+        #         Exporting ranked order of eadc genes for each cell type
+        #         The order is lowest to highest (0 -> lowest)
+                df_explain_rankdata.to_csv(f'./reports/deepexplain/cell_type_summary_with_rank/{model_detail}_{method_name}_{experiment_index}_{node_name}.csv.gzip'
+                                           , compression='gzip')
+            
         time_end = dt.datetime.now().time().strftime('%H:%M:%S') 
         print(f'end time, {time_end}')
         
