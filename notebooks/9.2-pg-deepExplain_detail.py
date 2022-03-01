@@ -86,10 +86,7 @@ for experiment_index in range(0,100):
             X = model.layers[0].input
         #     the target layer size which shows the biological layer, target_tensor --> T
             T = model.layers[1].input
-        #     the mask for the filtering the target node in for analysis
-            mask_ys = np.zeros((1, T.shape[1]))
             xs = X_data
-            print(f'input_tensor, {X}\ntarget_tensor, {T}\nmask_ys, {mask_ys.shape}\nxs, {xs.shape}')
 
         #     iterating the filtering mask for each node in the biological layer which defined as T
             for i_circuit in range(T.shape[1]):
@@ -97,11 +94,13 @@ for experiment_index in range(0,100):
                 print(i_circuit, node_name)
                 if i_circuit % 500 == 0:
                     print(i_circuit)
+        #         the mask for the filtering the target node in for analysis
+                mask_ys = np.zeros((1, T.shape[1]))
         #         filtering the target node in target layer with assigning value as 1
                 mask_ys[:, i_circuit] = 1.0
+                print(f'      mask sum {pd.DataFrame(mask_ys).sum(axis=1)}')
         #         compute attributions of each genes ('X') for each sample defined as 'xs' with defined mask 'T * mask_ys'
                 explain = de.explain(method_name, T * mask_ys, X, xs)
-            
         #         concat cell type with explain matrix
                 df_explain = pd.concat([pd.DataFrame(explain, columns=df.columns[:-1]), pd.DataFrame(y_data, columns=['cell_type']) ], axis=1)
         #         The mean score of each cell type
@@ -112,7 +111,7 @@ for experiment_index in range(0,100):
                                    , index=df_explain_cell_type_mean.index)
         #         Exporting ranked order of eadc genes for each cell type
         #         The order is lowest to highest (0 -> lowest)
-                df_explain_rankdata.to_csv(f'./reports/deepexplain/cell_type_summary_with_rank/{model_detail}_{method_name}_{experiment_index}_{node_name}.csv.gzip'
+                df_explain_rankdata.to_csv(f'./reports/deepexplain/ranking_for_cell_type/{model_detail}_{method_name}_{experiment_index}_{node_name}.csv.gzip'
                                            , compression='gzip')
             
         time_end = dt.datetime.now().time().strftime('%H:%M:%S') 
