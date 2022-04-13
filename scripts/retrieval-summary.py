@@ -40,7 +40,7 @@ def main(path):
     print('\nretrieval_summary_list, ',retrieval_summary_list)
     for i_retrieval in retrieval_summary_list:
         retrieval_dir = os.path.join(output_dir, i_retrieval)
-        print('\retrieval_dir, ',retrieval_dir)
+        print('retrieval_dir, ',retrieval_dir)
         # manipulating experiment name, for analysis purposes
 
         summary_table = pd.read_csv(retrieval_dir, sep=",", index_col=0)        
